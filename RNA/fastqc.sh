@@ -7,3 +7,5 @@ function fastqc_all() {
         fastqc $file
     done
 }
+
+fastqc_all()
