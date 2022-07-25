@@ -1,11 +1,12 @@
-# search for all file end with .fastq.gz, .fa.gz, .fa or fastq in the current directory and it subdirectories
-function fastqc_all() {
-    echo "fastqc_all"
-    for file in `find . -name "*.fastq.gz" -o -name "*.fa.gz" -o -name "*.fa" -o -name "*.fastq"`
-    do
-        echo "fastqc $file"
-        fastqc $file
-    done
+
+# Find all files under the currect directory and sub directory with the .fastq.gz,.fastq,fq,fq.gz extension 
+function all_fq() {
+    find . -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz"
 }
 
-fastqc_all()
+# Runs all the fastqc on the files found in the all_fq function
+for file in $(all_fq);
+do
+    echo $file
+    fastqc "$file"
+done
