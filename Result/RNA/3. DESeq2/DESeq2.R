@@ -47,22 +47,26 @@ plot3A(txi = txi.salmon_24hr,sigGene = sig_24hr,figure_name = "24hr Comparing th
 
 # ------------------------------- Plot3B --------------------------------------
 # Volcano PLot
+library(gridExtra)
 Plot3B = function(resdata){
   x = resdata %>% select(log2FoldChange,padj) 
   x$padj = ifelse(x$padj == 0,1e-300,x$padj)
   x$con = "non-significant"
   x$con[x$log2FoldChange > 1 & x$padj < 0.05] = "upregulated"
   x$con[x$log2FoldChange < -1 & x$padj < 0.05] = "downregulated"
+  table = x %>% dplyr::count(con)
+  colnames(table) = c("Condition","Number")
   z = ggplot(x,aes(x=log2FoldChange,y=-log10(padj),color = con)) + geom_point() +
     scale_colour_manual(values = c("green","grey","red")) +                       # Change the colour of dots
     theme_bw() +                                                                  # make it bw rather then grey background
     labs(x = "Change in Gene Expression",y = "P-adjustment value (-log10(p-adj))",color = "Gene status") + #naming
     scale_y_continuous(expand = c(0,10)) +                                         # Remove the gap between the results and x margin
+    annotation_custom(grob = tableGrob(table,rows = NULL),xmin = 0,xmax = 0,ymin = 100,ymax = 200) + # Adding the table to the plot
     geom_vline(xintercept = 1,linetype="dotted") + geom_hline(yintercept = -log10(0.05),linetype="dotted") + geom_vline(xintercept = -1,linetype="dotted")
   return(z)
 }
 
-Plot3B(resdata = resdata_24hr)
+Plot3B(resdata = resdata_2hr)
 
 # ------------------------------- Plot3C --------------------------------------
 # PCA plot (two options)
