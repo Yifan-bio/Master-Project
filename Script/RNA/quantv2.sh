@@ -1,5 +1,8 @@
 # ! /bin/bash
 # 27 July 2022
+
+
+
 out_dir=.
 index=/media/studentsgh129/project/support_doc/Gencode/salmon_pa_index/trancripts_index
 dir=/media/studentsgh129/project/Dataset/162nM_PMA_RNA_THP1
@@ -23,6 +26,9 @@ while IFS= read -r line; do
     done
     o="$out_dir/$line"
     echo "The full command of salmon been executed is as follows:
+    BAM
+    BAM
+    BAM
     salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o"
     salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o
 done < $input
