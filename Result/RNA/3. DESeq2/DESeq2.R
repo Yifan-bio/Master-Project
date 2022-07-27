@@ -98,8 +98,13 @@ x2 = Plot3D(txi = txi.salmon_2hr,sig = sig_2hr)
 
 ggpubr::ggarrange(x1,x2,common.legend = TRUE,labels = c("24 Hour","2 Hour"))
 
+# ----------------------------------- Plot 3E ----------------------------------
+library("VennDiagram")
+# Venn diagram for significantly regulated genes between the two conditions
+x = list(Later = as.character(sig_24hr$Row.names),Early = as.character(sig_2hr$Row.names))
+venn.diagram(x = x,filename = "Plot3E.png")
 
-# -----------------------------------Plot3E-------------------------------------
+# ---------------------------------- Plot3F ------------------------------------
 # MAplot
 
 x = as.data.frame(resIHW_2hr)
