@@ -1,59 +1,39 @@
 # ! /bin/bash
+# 30 July 2022
 
-o="./24hr"
-index="SRR8932929"
-# input="./run.txt"
+# out_dir=.
+# index=/media/studentsgh129/project/support_doc/Gencode/salmon_pa_index/trancripts_index
+# dir=/media/studentsgh129/project/Dataset/162nM_PMA_RNA_THP1
+# input=/media/studentsgh129/project/Dataset/162nM_PMA_RNA_THP1/run.txt
 
-# # find files containing $line (an argument) within the file name in current directory and it subdirectories
-
-# # function separating files based on if there is R1 in file name or R2 in file name
-
-# function separate_reads() {
-#     # if file contain R1, use the file as variable $R1
-#     if [[ $file == *"R1"* ]]; then
-#         R1=$file
-#         echo "Read 1 file: $file"
-#         continue
-#     fi
-#     # if the file contain R2,then echo the file name
-#     if [[ $file =~ "R2" ]]; then
-#         R2=$file
-#         echo "Read 2 file: $file"
-#     fi 
-# }
+out_dir=.
+index=/mnt/f/support_doc/Gencode/salmon_pa_index/trancripts_index
+dir=/mnt/f/Dataset/162nM_PMA_RNA_THP1
+input=/mnt/f/Dataset/162nM_PMA_RNA_THP1/run.txt
 
 
-# # find files containing $i within the file name in current directory and it subdirectories
-# function find_srr() {
-#     for file in `find . -name "*.fastq.gz"`;
-#     do
-#         echo $file
-#         if [[ $file =~ $1 ]]; then
-#             separate_reads $file
-#         fi
-#     done
-# }
+function find_read_pair() {
+    # Separating the file into read1 and read2
+    # Didnt use the $fastq as parameter as then it will only use one of the reads rather then both
+    for file in $fastq;
+    do
+        if [[ $file == *"_R1"* ]]; then
+            R1=$file
+            echo "Read 1 file: $R1"
+        fi
+        if [[ $file == *"_R2"* ]]; then
+            R2=$file
+            echo "Read 2 file: $R2"
+        fi
+    done
+}
 
-# # 
-
-# while read line; do
-#     echo "Now running paired-end salmon on $line"
-#     # convert $line to SRR number
-#     srr=${line##*}
-#     echo "das $srr"
-#     find_srr $srr
-#     echo "salmon -i $index --seqBias --gcBias -validateMappings --recoverOrphans -l A -p 8 -1 $R1 -2 $R2 -o $o"
-# done < $input
-
-
-
-# function all_fq() {
-#     find . -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz"
-# }
-
-# for file in $(all_fq);
-# do
-# echo "salmon -i $index --seqBias --gcBias -validateMappings --recoverOrphans -l A -p 8 -1 $ -2 $R2 -o $o"
-# done
-
-for i in $(ls ./*.fastq.gz | xargs -n 1 basename | sed 's/\(.*\)_.*/\1/' | sort -u)
+while IFS= read -r line; do
+    # Separating the file into read1 and read2
+    fastq=`find $dir -maxdepth 4 -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
+    find_read_pair
+    o="$out_dir/$line"
+    echo "The full command of salmon been executed is as follows:
+    salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o"
+    # salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o
+done < $input
