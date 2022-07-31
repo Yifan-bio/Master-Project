@@ -79,34 +79,77 @@ plotPCA(rld) + theme_bw()
 # ------------------------------- Plot3D --------------------------------------
 # Plotting Gene counts and significant regulated genes in each replicate
 
-Plot3D = function(txi,sig) {
-  x = as.data.frame(txi$counts)
-  colnames(x) = c("Untreat_1","Untreat_2","Treat_1","Treat2")
-  
-  x$name = gsub("(ENSG[0-9]+)\\.[0-9]+", "\\1",rownames(x))
-  # To long dataframe
-  x = x %>% pivot_longer(!name,names_to = "con",values_to = "count")
-  # Remove non-expressed genes
-  x = x %>% filter(count != 0)
-  
-  # Identify significant genes
-  x$sig = x$name %in% sig$Row.names
-  
-  x = ggplot(x,aes(x=log10(count),fill=sig)) +
-        geom_histogram() + 
-        facet_wrap(~con)
-  return(x)
-}
-x1 = Plot3D(txi = txi.salmon_24hr,sig = sig_24hr)
-x2 = Plot3D(txi = txi.salmon_2hr,sig = sig_2hr)
+# Plot3D = function(txi,sig) {
+#   x = as.data.frame(txi$counts)
+#   colnames(x) = c("Untreat_1","Untreat_2","Treat_1","Treat2")
+#   
+#   x$name = gsub("(ENSG[0-9]+)\\.[0-9]+", "\\1",rownames(x))
+#   # To long dataframe
+#   x = x %>% pivot_longer(!name,names_to = "con",values_to = "count")
+#   # Remove non-expressed genes
+#   x = x %>% filter(count != 0)
+#   
+#   # Identify significant genes
+#   x$sig = x$name %in% sig$Row.names
+#   
+#   x = ggplot(x,aes(x=log10(count),fill=sig)) +
+#         geom_histogram() + 
+#         facet_wrap(~con)
+#   return(x)
+# }
+# x1 = Plot3D(txi = txi.salmon_24hr,sig = sig_24hr)
+# x2 = Plot3D(txi = txi.salmon_2hr,sig = sig_2hr)
+# 
+# ggpubr::ggarrange(x1,x2,common.legend = TRUE,labels = c("24 Hour","2 Hour"))
 
-ggpubr::ggarrange(x1,x2,common.legend = TRUE,labels = c("24 Hour","2 Hour"))
+x = as.data.frame(txi$counts)
+colnames(x) = c("Untreat_1","Untreat_2","Early_1","Early_2","Later_1","Later_2")
+
+x$name = gsub("(ENSG[0-9]+)\\.[0-9]+", "\\1",rownames(x))
+# To long dataframe
+x = x %>% pivot_longer(!name,names_to = "con",values_to = "count")
+# Remove non-expressed genes
+x = x %>% filter(count != 0)
+# Identify significant genes
+x$sig2 = x$name %in% sig_2hr$Row.names
+x$sig24 = x$name %in% sig_24hr$Row.names
+
+z = x %>% filter(con %in% c("Untreat_1","Untreat_2"))
+
+plot1 = ggplot(data = subset(x,con %in% c("Early_1","Early_2")),aes(x=log10(count),fill=sig2)) +
+  geom_histogram() + 
+  facet_wrap(~con)+ 
+  scale_fill_manual(values = c("#A0A0A0","#3399FF")) +
+  theme_bw() +
+  scale_x_continuous(limits = c(0,5.5),expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,3500),expand = c(.001,.001)) 
+
+plot2 = ggplot(data = subset(x,con %in% c("Later_1","Later_2")),aes(x=log10(count),fill=sig24)) +
+  geom_histogram() + 
+  facet_wrap(~con)+ 
+  scale_fill_manual(values = c("#A0A0A0","#0066CC")) +
+  theme_bw() +
+  scale_x_continuous(limits = c(0,5.5),expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,3500),expand = c(.001,.001))
+
+plot3 = ggplot(z,aes(x=log10(count))) +
+  geom_histogram(aes(fill = sig24)) +
+  geom_histogram(data = subset(z,sig2 == "TRUE"),aes(fill="lightblue")) +
+  facet_wrap(~con) +
+  scale_fill_manual(values = c("#A0A0A0","#3399FF","#0066CC"),labels = c("All Gene","Significant in 2 hour","Significant in 24 hour")) +
+  theme_bw() +
+  scale_x_continuous(limits = c(0,5.5),expand = c(0,0)) +
+  scale_y_continuous(limits = c(0,3500),expand = c(.001,.001))
+
+ggpubr::ggarrange(plot3,plot1,plot2,common.legend = TRUE,ncol = 1)
 
 # ----------------------------------- Plot 3E ----------------------------------
 library("VennDiagram")
 # Venn diagram for significantly regulated genes between the two conditions
 x = list(Later = as.character(sig_24hr$Row.names),Early = as.character(sig_2hr$Row.names))
 venn.diagram(x = x,filename = "Plot3E.png")
+
+
 
 # ---------------------------------- Plot3F ------------------------------------
 # MAplot
