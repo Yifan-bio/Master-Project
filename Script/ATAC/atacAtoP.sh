@@ -4,6 +4,9 @@ read1=
 read2=
 output_dir=
 
+function trim() {
+    trim_galore --paired --retain_unpaired --output_dir $output_dir $read1 $read2
+}
 
 function Align() {
     bowtie2 --very-sensitive --end-to-end -p 6 --dovetail --no-discordant -X 2000 -k 5 -t -x $index  -1 $read1 -2 $read2 -U $unpaired1,$unpaired2 -S align.sam
