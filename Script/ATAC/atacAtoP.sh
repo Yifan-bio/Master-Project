@@ -66,7 +66,7 @@ cd ${WDIR}
 
 
 ##############################################################
-# Pipeline starts here
+# Pipeline function setup starts here
 ##############################################################
 
 # 1. Trimming the reads
@@ -82,29 +82,29 @@ function trim_QC() {
     fastqc -j 2 --outdir $trim_dir $Read1 $Read2
 }
 
+# 2. Alignment
 function Align() {
     bowtie2 --very-sensitive --end-to-end -p 4 --dovetail --no-mixed -X 2000 -t -x $Index -1 $Read1 -2 $Read2 > ${prefix}.bowtie2.log | samtools sort -@ 4 -O bam -o ${prefix}.bam
 }
 
+# 3. remove mitochondrial reads and duplicates
 function essential_removal() {
     samtools view -@ 4 -h ${prefix}.bam | grep -v chrM | samtools sort -@ 4 -O bam -o ${prefix}.rmChrM.bam
     picard MarkDuplicates Input=${prefix}.rmChrM.bam Output=${prefix}.rmChrM_dedup.bam METRICS_FILE=${prefix}.dedup.txt REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=LENIENT
 }
 
+# 4. remove low quality, unmapped, multimapped and impropoerly paired reads
 function optimal_removal() {
     samtools view -h -b -q 30 -@ 4 -F 1804 -f 2 -o ${prefix}.final.bam ${prefix}.rmChrM_dedup.bam
 }
 
 
+###############################################################
+# Pipeline main body start here
+###############################################################
 
+trim_QC
+Align
+essential_removal
+optimal_removal
 
-
-while IFS= read -r line; do
-    # Separating the file into read1 and read2
-    fastq=`find $dir -maxdepth 4 -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
-    find_read_pair
-    o="$out_dir/$line"
-    echo "The full command of salmon been executed is as follows:
-    salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o"
-    # salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o
-done < $input
