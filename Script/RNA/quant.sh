@@ -6,10 +6,10 @@
 # dir=/media/studentsgh129/project/Dataset/162nM_PMA_RNA_THP1
 # input=/media/studentsgh129/project/Dataset/162nM_PMA_RNA_THP1/run.txt
 
-out_dir=.
-index=/mnt/f/support_doc/Gencode/salmon_pa_index/trancripts_index
-dir=/mnt/f/Dataset/162nM_PMA_RNA_THP1
-input=/mnt/f/Dataset/162nM_PMA_RNA_THP1/run.txt
+out_dir=/mnt/d
+index=/mnt/d/support_doc/Gencode/salmon_pa_index/trancripts_index
+dir=/mnt/d/Dataset/162nM_PMA_RNA_THP1
+input=/mnt/d/Dataset/162nM_PMA_RNA_THP1/run.txt
 
 
 function find_read_pair() {
@@ -28,12 +28,16 @@ function find_read_pair() {
     done
 }
 
+function run_salmon() {
+    echo "The full command of salmon been executed is as follows:
+    salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o"
+    # salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o
+}
+
 while IFS= read -r line; do
     # Separating the file into read1 and read2
     fastq=`find $dir -maxdepth 4 -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
     find_read_pair
     o="$out_dir/$line"
-    echo "The full command of salmon been executed is as follows:
-    salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o"
-    # salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o
+    run_salmon
 done < $input
