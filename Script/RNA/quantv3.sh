@@ -75,7 +75,7 @@ function find_ena_pair() {
 function run_salmon() {
     echo "The full command of salmon been executed is as follows:
     $salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o"
-    $salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o
+    #$salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o
 }
 
 while IFS= read -r line; do
@@ -85,3 +85,22 @@ while IFS= read -r line; do
     o="$WDIR/$line"
     run_salmon
 done < $sample_list
+
+
+
+
+# function verify_pair() { 
+#     if [[ ${R1} == ${R2} ]]; then
+#         echo "Error: R1 and R2 are the same file"
+#         exit -1
+#     fi
+#     # check if R1 and R2 is not the same format
+#     R1_R2_diff=`diff -q ${R1} ${R2} | wc -l`
+#     if [[ "${R1_R2_diff}" != "1" ]]; then
+#         echo "Error: R1 and R2 are not the same length (So likely not the same pair)"
+#         echo "R1: ${R1}"
+#         echo "R2: ${R2}"
+#         exit -1
+#     fi
+#     # Still in progress
+# }
