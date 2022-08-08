@@ -20,6 +20,7 @@ usage() {
 	echo -e "-g <string>		Genome files used to make bowtie2 index file"	
 	echo -e "-b <string>		Blacklist file from ENCODE project (boyle-lab)"
 	echo -e "-o <string>		Output directory with all result files"
+	echo -e "-m <string>		Mode for analysis; there is strict and lenient (default: strict). Strict will remove chrM,duplicate,low-quality,multimap and improper mapped. While lenient will only run remove chrM and deduplicate"
 	exit 1
 }
 
