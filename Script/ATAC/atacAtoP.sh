@@ -31,8 +31,9 @@ blacklist=""
 Index=""
 GenomeFasta=""
 prefix="test"
+mode="strict"
 
-while getopts ":r1:r2:i:g:b:o:p:" op; do
+while getopts ":r1:r2:i:g:b:o:p:m:" op; do
 	case $op in
 		r1) R1=${OPTARG} ;;
 		r2) R2=${OPTARG} ;;
@@ -41,6 +42,7 @@ while getopts ":r1:r2:i:g:b:o:p:" op; do
 		b) blacklist=${OPTARG} ;;
 		o) WDIR=${OPTARG} ;;
         p) prefix=${OPTARG} ;;
+		m) mode=${OPTARG} ;;
 		*) usage ;;
 	esac
 done
@@ -92,13 +94,21 @@ function Align() {
 function essential_removal() {
     samtools view -@ 4 -h ${prefix}.bam | grep -v chrM | samtools sort -@ 4 -O bam -o ${prefix}.rmChrM.bam
     picard MarkDuplicates Input=${prefix}.rmChrM.bam Output=${prefix}.rmChrM_dedup.bam METRICS_FILE=${prefix}.dedup.txt REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=LENIENT
+	samtools index ${prefix}.rmChrM_dedup.bam
 }
 
 # 4. remove low quality, unmapped, multimapped and impropoerly paired reads
 function optimal_removal() {
+	samtools view -@ 4 -h ${prefix}.bam | grep -v chrM | samtools sort -@ 4 -O bam -o ${prefix}.rmChrM.bam
+    picard MarkDuplicates Input=${prefix}.rmChrM.bam Output=${prefix}.rmChrM_dedup.bam METRICS_FILE=${prefix}.dedup.txt REMOVE_DUPLICATES=true VALIDATION_STRINGENCY=LENIENT
     samtools view -h -b -q 30 -@ 4 -F 1804 -f 2 -o ${prefix}.final.bam ${prefix}.rmChrM_dedup.bam
+	samtools index ${prefix}.final.bam
 }
 
+# 5. Peak calling
+function peak_calling() {
+	HMMRATAC -b ${prefix}.final.bam -i ${prefix}.final.bam.bai -g $GenomeFasta -o ${prefix}.hmmratac -e $blacklist -m 75,200,400,600 --window 5000000
+}
 
 ###############################################################
 # Pipeline main body start here
@@ -106,6 +116,9 @@ function optimal_removal() {
 
 trim_QC
 Align
-essential_removal
-optimal_removal
-
+if [[ $mode == "strict" ]]; then
+	essential_removal
+	peak_calling 
+elif [[ $mode == "lenient" ]]; then
+	optimal_removal
+fi
