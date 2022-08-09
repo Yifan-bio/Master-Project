@@ -1,5 +1,5 @@
 # ! /bin/bash
-# 5 August 2022
+# 9 August 2022
 ##########################################################################
 echo "#########################################################################"
 echo "RNA sequencing pseudoalignment analysis"
@@ -7,58 +7,82 @@ echo "#########################################################################"
 ##########################################################################
 #set -o pipefail
 #export LC_ALL=C
-#
+
+# Prerequisite:
+# - salmon
+
+# Function to do
+# - add extra paramters for analysis
+# - verify the salmon binary is available
+# - verify the two files are paired-end
+
+##########################################################################
+#                          Adding paramters
+##########################################################################
+
 # help message
 usage() {
 	echo -e "Usage: $0 [options]"
 	echo -e ""
-	echo -e "-i <string>		Index used for salmon"		
-	echo -e "-l <string>		sample list file that need to run"
-    echo -e "-f <string>		Directory of the cDNA files (or can be 3 directry higher)"
-	echo -e "-o <string>		Output directory with all result files"
+	echo -e "-i <string>		Salmon Index"		
+	echo -e "-l <string>		txt file with Accession IDs of required samples"
+    echo -e "-f <string>		Directory with library files"
+    echo -e ""
+    echo -e "Optional parameters:"
+    echo -e "-t <string>		Number of threads to be used (default: 4)"
+    echo -e "-m <string>		Max depth to search from the library directory (-f) 
+                        (default: 2; Search the directory and one subdirectory below)"
+	echo -e "-o <string>		Output directory with all salmon results (default: current directory)"
     echo -e "-s <string>		Directory to salmon binary file if it is not in the PATH"
+    #echo -e "-e <string>		Adding more paramters rather then default I added (default: none)"
 	exit 1
 }
 
 #Initiate parameters with NULL
-index=""
-sample_list=""
-dir=""
+depth=2
 WDIR="."
 salmon="salmon"
+extra_args=""
+threads=4
 
-while getopts ":i:l:o:f:s:" op; do
+while getopts ":i:l:m:o:f:s:t:" op; do
 	case $op in
 		i) index=${OPTARG} ;;
 		l) sample_list=${OPTARG} ;;
+        m) depth=${OPTARG} ;;
 		o) WDIR=${OPTARG} ;;
         f) dir=${OPTARG} ;;
         s) salmon=${OPTARG} ;;
+        #e) extra_args=${OPTARG} ;;
+        t) threads=${OPTARG} ;;
 		*) usage ;;
 	esac
 done
 shift $((OPTIND-1))
-#
+
 # check necessary parameters
 if [[ -z $index ]] || [[ -z $sample_list ]] || [[ -z $dir ]]; then
 	echo -e "Guess which 3 is required"
 	usage
 	exit -1
 fi
-#
+
 #Get absolute file path, so users can use relative/absolute as they like.
 [[ ${index} != "" ]] && Index=`realpath ${index}`
 [[ ${sample_list} != "" ]] && GenomeFasta=`realpath ${sample_list}`
 [[ ${dir} != "" ]] && cDNA_file=`realpath ${dir}`
 [[ ${WDIR} != "" ]] && WDIR=`realpath ${WDIR}`
-#
+
 # make directories if not exist and enter working directory.
 [[ ! -d ${WDIR} ]] && mkdir -p ${WDIR}
 cd ${WDIR}
 
+##########################################################################
+#                               Functions
+##########################################################################
+
+# Separate the read1 and read2 files for the sample
 function find_ena_pair() {
-        # Separating the file into read1 and read2
-    # Didnt use the $fastq as parameter as then it will only use one of the reads rather then both
     for file in $fastq;
     do
         if [[ $file == *"_R1."* ]] || [[ $file == *"_2."* ]]; then
@@ -72,23 +96,39 @@ function find_ena_pair() {
     done
 }
 
+# Running salmon using the default salmon parameters I used
 function run_salmon() {
     echo "The full command of salmon been executed is as follows:
-    $salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o"
-    #$salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $o
+    $salmon quant -i $index -p $threads -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
+    $salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --recoverOrphans -o $o
 }
+
+# function to block the logs
+function log_block() {
+    echo "#########################################################################"
+    echo "#########################################################################"
+    echo "#########################################################################"
+}
+
+##########################################################################
+#                               Main
+##########################################################################
 
 while IFS= read -r line; do
     # Separating the file into read1 and read2
-    fastq=`find $dir -maxdepth 4 -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
+    fastq=`find $dir -maxdepth $depth -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
     find_ena_pair
     o="$WDIR/$line"
     run_salmon
+    log_block
 done < $sample_list
 
+##########################################################################
+#                               End
+##########################################################################
+# The following is a proposed function
 
-
-
+# Verify the pairs
 # function verify_pair() { 
 #     if [[ ${R1} == ${R2} ]]; then
 #         echo "Error: R1 and R2 are the same file"
@@ -104,3 +144,5 @@ done < $sample_list
 #     fi
 #     # Still in progress
 # }
+
+# Verify the presence of salmon and it function

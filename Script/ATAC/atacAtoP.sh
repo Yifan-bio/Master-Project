@@ -18,20 +18,12 @@ usage() {
 	echo -e "-r2 <string>		Read2 file"
 	echo -e "-i <string>		Index used for bowtie2"		
 	echo -e "-g <string>		Genome files used to make bowtie2 index file"	
+	echo -e "-p <string>		Prefix for all the output files"
 	echo -e "-b <string>		Blacklist file from ENCODE project (boyle-lab)"
 	echo -e "-o <string>		Output directory with all result files"
 	echo -e "-m <string>		Mode for analysis; there is strict and lenient (default: strict). Strict will remove chrM,duplicate,low-quality,multimap and improper mapped. While lenient will only run remove chrM and deduplicate"
 	exit 1
 }
-
-#Initiate parameters with NULL
-R1=""
-R2=""
-blacklist=""
-Index=""
-GenomeFasta=""
-prefix="test"
-mode="strict"
 
 while getopts ":r1:r2:i:g:b:o:p:m:" op; do
 	case $op in
@@ -47,6 +39,13 @@ while getopts ":r1:r2:i:g:b:o:p:m:" op; do
 	esac
 done
 shift $((OPTIND-1))
+
+#Initiate parameters with NULL
+blacklist=""
+GenomeFasta=""
+prefix="test"
+mode="strict"
+WDIR="."
 
 # check necessary parameters
 if [[ -z $R1 ]] || [[ -z $R2 ]] || [[ -z $Index ]]; then
@@ -122,3 +121,4 @@ if [[ $mode == "strict" ]]; then
 elif [[ $mode == "lenient" ]]; then
 	optimal_removal
 fi
+peak_calling

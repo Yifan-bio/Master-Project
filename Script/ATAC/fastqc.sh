@@ -5,43 +5,52 @@ usage() {
 	echo -e "Usage: $0 [options]"
 	echo -e ""
 	echo -e "-d <string>		Direcotry of the files that want to be run"		
-	echo -e "-o <string>		Directory of the output files"
-    echo -e "-t <string>		Number of threads to be used (default: 4) (each threads uses 250MB)"
+	echo -e "-o <string>		Directory of the output files (If missing will be using the input directory)"
+    echo -e "-t <string>		Number of threads to be used (default: 4)
+	                One thread uses 250MB of RAM memory and process 1 file (e.g. 10 threads will use 2500MB and process 10 file simultaneously)"
+	echo -e "-h			Print this help message and exit"
+	echo -e "-m <string>		Maxdepth of the file to look for(default is 1; the current directory)"
 	exit 1
 }
 
 # default variables
-dir="."
-outdir='.'
-t=4
+threads=4
+depth=1
 
-while getopts ":d:o:t:" op; do
+while getopts ":d:o:t:m:h:" op; do
 	case $op in
         d) dir=${OPTARG} ;;
         o) outdir=${OPTARG} ;;
         t) threads=${OPTARG} ;;
+		m) depth=${OPTARG} ;;
+		h) usage ;;
 		*) usage ;;
 	esac
 done
 shift $((OPTIND-1))
 
 # check necessary parameters
-# if [[ -z $dir ]]; then
-# 	echo -e "Guess which ONE is required"
-# 	usage
-# 	exit -1
-# fi
-#
+if [[ -z $dir ]]; then
+	echo -e "Guess which ONE is required"
+	usage
+	exit -1
+fi
+
+# Output file in the same directory as the input file
+if [ -z "$outdir" ]; then
+	outdir=$dir
+fi
+
 #Get absolute file path, so users can use relative/absolute as they like.
 [[ ${dir} != "" ]] && Index=`realpath ${dir}`
 [[ ${outdir} != "" ]] && Index=`realpath ${outdir}`
 
 # First, output the information of the run
-echo "Using $t threads to run fastqc for the following files:"
+echo "Using $threads threads to run fastqc for the following files:"
 
 # Find all files under the currect directory and sub directory with the .fastq.gz,.fastq,fq,fq.gz extension
 function all_fq() {
-    find $dir -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz"
+    find $dir -maxdepth $depth -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz"
 }
 
 # Creating the variable for putting all of the files to run
@@ -54,7 +63,19 @@ do
     list="$list $file"
 done
 
-echo "$list"
-fastqc -t $t -o $outdir $list
+echo "############################################################"
+echo "############################################################"
+echo "############################################################"
+
+echo "full command: "
+echo "fastqc -t $threads -o $outdir $list"
+
+echo "############################################################"
+echo "############################################################"
+echo "############################################################"
+
+echo "Rest is log from fastqc:"
+
+fastqc -t $threads -o $outdir $list
 
 exit 0;
