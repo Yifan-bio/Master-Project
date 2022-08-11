@@ -18,4 +18,4 @@ suppa.py psiPerEvent -i ~/annotation/hg19_ensembl_events_all_events.ioe -e ~/tra
 	~/scripts/split_file.R ~/tra2/Salmon/quantification/iso_tpm.txt SRR1513329,SRR1513330,SRR1513331 SRR1513332,SRR1513333,SRR1513334 ~/tra2/Salmon/quantification/CTRL.tpm ~/tra2/Salmon/quantification/KD.tpm 
 	~/scripts/split_file.R ~/tra2/SUPPA/events.psi SRR1513329,SRR1513330,SRR1513331 SRR1513332,SRR1513333,SRR1513334 ~/tra2/SUPPA/CTRL.psi ~/tra2/SUPPA/KD.psi
 	#5.2: Run SUPPA
-	python ~/suppa.py diffSplice -m empirical -i ~/annotation/hg19_ensembl_events_all_events.ioe -e ~/tra2/Salmon/quantification/CTRL.tpm ~/tra2/Salmon/quantification/KD.tpm -p ~/tra2/SUPPA/CTRL.psi ~/tra2/SUPPA/KD.psi -o ~/tra2/SUPPA/CTRL_KD
+	suppa.py diffSplice -m empirical -i ./gencodev40_events_all_events.ioe -e ./CTRL.tpm ./Late.tpm -pa -gc -p ./CTRL.psi ./Later.psi -o ./CTRL_Later
