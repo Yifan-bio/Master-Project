@@ -44,8 +44,9 @@ WDIR="."
 salmon="salmon"
 extra_args=""
 threads=4
+mode="paired-end"
 
-while getopts ":i:l:m:o:f:s:t:" op; do
+while getopts ":i:l:m:o:f:s:m:t:" op; do
 	case $op in
 		i) index=${OPTARG} ;;
 		l) sample_list=${OPTARG} ;;
@@ -53,6 +54,7 @@ while getopts ":i:l:m:o:f:s:t:" op; do
 		o) WDIR=${OPTARG} ;;
         f) dir=${OPTARG} ;;
         s) salmon=${OPTARG} ;;
+        m) mode=${OPTARG} ;;
         #e) extra_args=${OPTARG} ;;
         t) threads=${OPTARG} ;;
 		*) usage ;;
@@ -65,6 +67,15 @@ if [[ -z $index ]] || [[ -z $sample_list ]] || [[ -z $dir ]]; then
 	echo -e "Guess which 3 is required"
 	usage
 	exit -1
+fi
+
+# check for single end mode
+if [[ $mode == "single-end" ]]; then  
+    if [[ -n $R2 ]]; then
+        echo -e "R2 file is provided but single-end mode is selected"
+        usage
+        exit -1
+    fi
 fi
 
 #Get absolute file path, so users can use relative/absolute as they like.
@@ -81,26 +92,37 @@ cd ${WDIR}
 #                               Functions
 ##########################################################################
 
+# ============================================================
+# Primary functions
+# ============================================================
+
 # Separate the read1 and read2 files for the sample
 function find_ena_pair() {
     for file in $fastq;
     do
-        if [[ $file == *"_R1."* ]] || [[ $file == *"_2."* ]]; then
+        if [[ $file == *"_R1.f"* ]] || [[ $file == *"_2.f"* ]]; then
             R1=$file
             echo "Read 1 file: $R1"
         fi
-        if [[ $file == *"_R2."* ]] || [[ $file == *"_2."* ]]; then
+        if [[ $file == *"_R2.f"* ]] || [[ $file == *"_2.f"* ]]; then
             R2=$file
             echo "Read 2 file: $R2"
         fi
     done
 }
 
-# Running salmon using the default salmon parameters I used
-function run_salmon() {
+# Running paired end analysis
+function paired_end() {
     echo "The full command of salmon been executed is as follows:
     $salmon quant -i $index -p $threads -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
     $salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --recoverOrphans -o $o
+}
+
+# Running single end analysis
+function single_end() {
+    echo "The full command of salmon been executed is as follows:
+    $salmon quant -i $index -l A -r $R1 -p 8 --validateMappings --seqBias -o $o"
+    $salmon quant -i $index -l A -r $R1 -p 8 --validateMappings --seqBias -o $o
 }
 
 # function to block the logs
@@ -110,24 +132,45 @@ function log_block() {
     echo "#########################################################################"
 }
 
-# read the 11th to 15th line of quant.sf file to get the number of reads
-function get_reads() {
-    reads=$(grep -A 10 "^${sample}" quant.sf | sed -n '11p' | awk '{print $1}')
-    echo "The number of reads for ${sample} is $reads"
+# ============================================================
+# Secondary functions
+# ============================================================
+
+function pair() {
+    while IFS= read -r line; do
+        # Separating the file into read1 and read2
+        fastq=`find $dir -maxdepth $depth -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
+        find_ena_pair
+        o="$WDIR/$line"
+        paired_end
+        log_block
+    done < $sample_list
+}
+
+function single() {
+    while IFS= read -r line; do
+        # Separating the file into read1 and read2
+        fastq=`find $dir -maxdepth $depth -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
+        o="$WDIR/$line"
+        single_end
+        log_block
+    done < $sample_list
 }
 
 ##########################################################################
 #                               Main
 ##########################################################################
 
-while IFS= read -r line; do
-    # Separating the file into read1 and read2
-    fastq=`find $dir -maxdepth $depth -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
-    find_ena_pair
-    o="$WDIR/$line"
-    run_salmon
-    log_block
-done < $sample_list
+if [[ $mode == "paired-end" ]]; then
+    echo "The mode is paired-end"
+    pair
+elif [[ $mode == "single-end" ]]; then
+    echo "The mode is single-end"
+    single
+else
+    echo "The mode is not specified correctly"
+    usage
+fi
 
 ##########################################################################
 #                               End
