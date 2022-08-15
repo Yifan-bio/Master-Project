@@ -55,3 +55,6 @@ bowtie2 index -p 8 -x ${WDIR}/genome -f ${GenomeFasta}
 
 # Getting the genome size
 genome_size=`awk '{sum+=$3-$2}END{print sum}' ${GenomeFasta}`
+
+# Output the genome file name used
+echo "Genome file used: ${GenomeFasta}" > ${WDIR}/genome_file.txt

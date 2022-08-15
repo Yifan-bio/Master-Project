@@ -110,6 +110,12 @@ function log_block() {
     echo "#########################################################################"
 }
 
+# read the 11th to 15th line of quant.sf file to get the number of reads
+function get_reads() {
+    reads=$(grep -A 10 "^${sample}" quant.sf | sed -n '11p' | awk '{print $1}')
+    echo "The number of reads for ${sample} is $reads"
+}
+
 ##########################################################################
 #                               Main
 ##########################################################################
