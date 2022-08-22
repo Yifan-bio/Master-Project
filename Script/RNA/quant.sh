@@ -85,7 +85,7 @@ cd ${WDIR}
 function find_ena_pair() {
     for file in $fastq;
     do
-        if [[ $file == *"_R1."* ]] || [[ $file == *"_2."* ]]; then
+        if [[ $file == *"_R1."* ]] || [[ $file == *"_1."* ]]; then
             R1=$file
             echo "Read 1 file: $R1"
         fi

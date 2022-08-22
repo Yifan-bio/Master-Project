@@ -1,3 +1,28 @@
+
+WDIR=
+Input_salmon=
+
+# list all files in the directory
+for file in $WDIR/*/quant.sf
+do
+	# get the accession number from the file name
+    # get the accession number from the folder name
+	acc=`basename $file | cut -d'_' -f1`
+	# get the sample name from the folder name
+	sample=`basename $file | cut -d'_' -f2`
+
+	# get the read1 and read2 file
+	R1=${file%.fastq.gz}_R1.fastq.gz
+	R2=${file%.fastq.gz}_R2.fastq.gz
+	# get the output directory
+	out_dir=$WDIR/$acc
+	# create the output directory if it does not exist
+	mkdir -p $out_dir
+	# run salmon
+	salmon quant -i $Input_salmon -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --posBias -o $out_dir
+done
+
+
 #2. Extract the TPM values from the Salmon output
 multipleFieldSelection.py -i ./salmon/Input/*/quant.sf -k 1 -f 4 -o ./salmon/Input/iso_tpm.txt
 
