@@ -1,21 +1,34 @@
 
-column=4
-WDIR="."
+dir="."
+workdir="."
 
-file_list=""
-x=`ls /mnt/e/salmon/Input/*/quant.sf | cut --delimiter ' ' --fields 1 | readpath`
-echo $x
-awk 'NR!=1 {print $1}' $x > $WDIR/suppa.txt
+# Variables to verify some stuff
+num=0 # Helps the isolate the first column
+list="" # used to record the files need to be combined
 
-for file in /mnt/e/salmon/Input/*/quant.sf
-do
-    echo $file
-    # Getting the folder name
-    file_name=`dirname $file`
-    file_name=`basename $file_name | cut -f1`
-    echo $file_name
-    awk -F "\t" -v HEADER=$file_name 'BEGIN{print HEADER}; NR!=1 {print $4}' $file > $WDIR/$file_name.txt
-    # add absolute path of file_name.txt to the file_list variable
+for i in $dir/*/quant.sf;
+    do
+    
+    # Getting the name of the file
+    if [[ $num == 0 ]]; then
+        cat $i | awk '{print $1}' > $workdir/TXname.txt
+        num=$(($num + 1))
+    fi
+    
+    # Getting the name of the file to make it the name for the file record
+    name=`realpath ${i}`
+    name=$(basename $(dirname $name))
+    
+    # Extracting the results
+    cat $i | awk -v file_name="$name" 'BEGIN{print file_name} {if (NR!=1) {print $4}}' > $workdir/$name.txt
+    
+    # Keeping record of the location so can be easily combined
+    file_dir=`realpath $workdir/$name.txt`
+    list="$list $file_dir"
 
-    file_list="$file_list $WDIR/$file_name.txt"
 done
+
+# Combine files and and then remove temp files
+paste $workdir/TXname.txt $list > suppatest.txt
+rm $workdir/TXname.txt $list
+
