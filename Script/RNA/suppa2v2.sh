@@ -1,5 +1,5 @@
 
-dir="."
+dir="/mnt/d/RNA/salmon/Input/"
 workdir="."
 
 # Variables to verify some stuff
@@ -11,7 +11,7 @@ for i in $dir/*/quant.sf;
     
     # Getting the name of the file
     if [[ $num == 0 ]]; then
-        cat $i | awk '{print $1}' > $workdir/TXname.txt
+        cat $i | awk -v file_name="" 'BEGIN{print skip} {if (NR!=1) {print $1}}' > $workdir/TXname.txt
         num=$(($num + 1))
     fi
     
