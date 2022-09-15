@@ -164,3 +164,17 @@ ggplot(x, aes(x = baseMean,y = log2FoldChange, color = significant)) +
   labs(x="mean of normalized counts", y="log fold change") + 
   scale_colour_manual(name="q-value", values=("Significant"="red"), na.value="grey50") + 
   theme_bw()
+
+
+# -----------------------Extra 1-----------------------------
+# This plot is used to determine the model to be used (By the result it suggests Negative binomial rather then poisson)
+data <- txi$counts %>% round() %>% data.frame()
+mean_counts <- apply(data[,5:6], 1, mean) 
+variance_counts <- apply(data[,5:6], 1, var)
+df <- data.frame(mean_counts, variance_counts)
+
+ggplot(df) +
+  geom_point(aes(x=mean_counts, y=variance_counts)) + 
+  scale_y_log10(limits = c(1,1e9)) +
+  scale_x_log10(limits = c(1,1e9)) +
+  geom_abline(intercept = 0, slope = 1, color="red")

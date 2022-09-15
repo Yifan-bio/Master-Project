@@ -1,4 +1,6 @@
+# Script for the data visualisation for salmon results
 
+# Inputing Datas
 salmon_meta = read.csv("./Input/salmon.csv",sep = ";",row.names = 1)                      # Reading file and creating the dataframe
 file_list = c('./Input/0hr_rep1/quant.sf',
               './Input/0hr_rep2/quant.sf',
@@ -7,7 +9,6 @@ file_list = c('./Input/0hr_rep1/quant.sf',
               './Input/24hr_rep1/quant.sf',
               './Input/24hr_rep2/quant.sf')
 txi <- tximport(file_list,type = "salmon", txOut = F,tx2gene = tx2gene,ignoreAfterBar = T)
-
 
 # ------------------------- Plot 2A ----------------------------
 # Plotting Mapping rate
