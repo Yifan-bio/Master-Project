@@ -11,6 +11,8 @@ workdir="."
 num=0
 list=""
 
+
+
 for i in $dir/*/aux_info/meta_info.json;
     do
     

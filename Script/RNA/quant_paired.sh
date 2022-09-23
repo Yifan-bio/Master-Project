@@ -82,6 +82,9 @@ cd ${WDIR}
 ##########################################################################
 
 # Separate the read1 and read2 files for the sample
+# Input: fastq file found with the accession name
+# Output: variable R1 and R2 with the paired end reads in order
+
 function find_ena_pair() {
     for file in $fastq;
     do
@@ -97,6 +100,8 @@ function find_ena_pair() {
 }
 
 # Running salmon using the default salmon parameters I used
+# Input: Read 1, Read2, index, number of thread, output location
+# salmon result
 function run_salmon() {
     echo "The full command of salmon been executed is as follows:
     $salmon quant -i $index -p $threads -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
@@ -111,10 +116,8 @@ function log_block() {
 }
 
 # read the 11th to 15th line of quant.sf file to get the number of reads
-function get_reads() {
-    reads=$(grep -A 10 "^${sample}" quant.sf | sed -n '11p' | awk '{print $1}')
-    echo "The number of reads for ${sample} is $reads"
-}
+echo $name
+echo "hello"
 
 ##########################################################################
 #                               Main

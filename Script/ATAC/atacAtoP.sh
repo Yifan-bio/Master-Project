@@ -17,6 +17,7 @@ usage() {
 	echo -e "-r1 <string>		Read1 file"
 	echo -e "-r2 <string>		Read2 file"
 	echo -e "-i <string>		Index used for bowtie2"		
+	echo -e "-readlength <string>		Read length of ATAC library"
 	echo -e "-g <string>		Genome files used to make bowtie2 index file"	
 	echo -e "-p <string>		Prefix for all the output files"
 	echo -e "-b <string>		Blacklist file from ENCODE project (boyle-lab)"
@@ -25,27 +26,32 @@ usage() {
 	exit 1
 }
 
-while getopts ":r1:r2:i:g:b:o:p:m:" op; do
-	case $op in
-		r1) R1=${OPTARG} ;;
-		r2) R2=${OPTARG} ;;
-		i) Index=${OPTARG} ;;
-		g) GenomeFasta=${OPTARG} ;;
-		b) blacklist=${OPTARG} ;;
-		o) WDIR=${OPTARG} ;;
-        p) prefix=${OPTARG} ;;
-		m) mode=${OPTARG} ;;
-		*) usage ;;
-	esac
-done
-shift $((OPTIND-1))
-
 #Initiate parameters with NULL
 blacklist=""
 GenomeFasta=""
 prefix="test"
 mode="strict"
 WDIR="."
+readlength="75"
+
+while getopts ":r1:r2:i:g:b:o:p:m:" op; do
+	case $op in
+		r1) R1=${OPTARG} ;;
+		r2) R2=${OPTARG} ;;
+		i) Index=${OPTARG} ;;
+		readlength) readlength=${OPTARG} ;;
+		g) GenomeFasta=${OPTARG} ;;
+		b) blacklist=${OPTARG} ;;
+		o) WDIR=${OPTARG} ;;
+        p) prefix=${OPTARG} ;;
+		m) mode=${OPTARG} ;;
+		l) readlength=${OPTARG} ;;
+		*) usage ;;
+	esac
+done
+shift $((OPTIND-1))
+
+
 
 # check necessary parameters
 if [[ -z $R1 ]] || [[ -z $R2 ]] || [[ -z $Index ]]; then
@@ -106,7 +112,10 @@ function optimal_removal() {
 
 # 5. Peak calling
 function peak_calling() {
-	HMMRATAC -b ${prefix}.final.bam -i ${prefix}.final.bam.bai -g $GenomeFasta -o ${prefix}.hmmratac -e $blacklist -m 75,200,400,600 --window 5000000
+	if [[ $readlength > 100 ]]; then
+	    $readlength=100
+	fi
+	HMMRATAC -b ${prefix}.final.bam -i ${prefix}.final.bam.bai -g $GenomeFasta -o ${prefix}.hmmratac -e $blacklist -m $readlength,200,400,600 --window 5000000
 }
 
 ###############################################################
