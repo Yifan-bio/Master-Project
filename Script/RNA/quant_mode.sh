@@ -1,5 +1,5 @@
 # ! /bin/bash
-# 9 August 2022
+# 23 Sep 2022
 ##########################################################################
 echo "#########################################################################"
 echo "RNA sequencing pseudoalignment analysis"
@@ -30,10 +30,11 @@ usage() {
     echo -e ""
     echo -e "Optional parameters:"
     echo -e "-t <string>		Number of threads to be used (default: 4)"
-    echo -e "-m <string>		Max depth to search from the library directory (-f) 
+    echo -e "-d <string>		Max depth to search from the library directory (-f) 
                         (default: 2; Search the directory and one subdirectory below)"
 	echo -e "-o <string>		Output directory with all salmon results (default: current directory)"
     echo -e "-s <string>		Directory to salmon binary file if it is not in the PATH"
+    echo -e "-m <string>        Run single end read <single-end> or paired-end reads (default: paired-end)"
     #echo -e "-e <string>		Adding more paramters rather then default I added (default: none)"
 	exit 1
 }
@@ -50,7 +51,7 @@ while getopts ":i:l:m:o:f:s:m:t:" op; do
 	case $op in
 		i) index=${OPTARG} ;;
 		l) sample_list=${OPTARG} ;;
-        m) depth=${OPTARG} ;;
+        d) depth=${OPTARG} ;;
 		o) WDIR=${OPTARG} ;;
         f) dir=${OPTARG} ;;
         s) salmon=${OPTARG} ;;

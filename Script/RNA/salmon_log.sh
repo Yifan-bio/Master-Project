@@ -1,8 +1,16 @@
+#! /bin/bash
+# 23 Sep 2022
+######################################################################################
+#
+# This script is designed to extract the log files from salmon to get all the mapping information in one run
+#
+######################################################################################
 
 dir="."
 workdir="."
 num=0
 list=""
+
 for i in $dir/*/aux_info/meta_info.json;
     do
     
