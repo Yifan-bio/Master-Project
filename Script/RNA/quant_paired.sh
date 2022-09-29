@@ -82,8 +82,8 @@ cd ${WDIR}
 ##########################################################################
 
 # Separate the read1 and read2 files for the sample
-# Input: fastq file found with the accession name
-# Output: variable R1 and R2 with the paired end reads in order
+# Input: fastq file found with the accession name ($fastq)
+# Output: variable R1 and R2 with the paired end reads in order ($R1 & $R2)
 
 function find_ena_pair() {
     for file in $fastq;
@@ -99,9 +99,9 @@ function find_ena_pair() {
     done
 }
 
-# Running salmon using the default salmon parameters I used
-# Input: Read 1, Read2, index, number of thread, output location
-# salmon result
+# Running salmon using the salmon parameters used in the study
+# Input: Read 1 ($R1), Read2 ($R2), index ($index), number of thread ($threads), output location ($WDIR)
+# Output: Salmon result
 function run_salmon() {
     echo "The full command of salmon been executed is as follows:
     $salmon quant -i $index -p $threads -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
@@ -115,22 +115,26 @@ function log_block() {
     echo "#########################################################################"
 }
 
-# read the 11th to 15th line of quant.sf file to get the number of reads
-echo $name
-echo "hello"
-
 ##########################################################################
 #                               Main
 ##########################################################################
 
 while IFS= read -r line; do
-    # Separating the file into read1 and read2
     fastq=`find $dir -maxdepth $depth -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
     find_ena_pair
     o="$WDIR/$line"
     run_salmon
     log_block
 done < $sample_list
+
+# Structure explanation (Each line correspond to the code):
+# 1: Using a while loop to perform the same procedure for each of the file listed in the $sample_list
+# 2: Look for all the file name containing the accession number you have listed in the $sample_list file
+# 3: Seperate the two files found (Suppose to two) into read 1 and read 2 files
+# 4: Create a output directory for each of the sample
+# 5: Perform salmon in paired end mode for the sample
+# 6: Just to look nice
+# 7: End of the while loop
 
 ##########################################################################
 #                               End
