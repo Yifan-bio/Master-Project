@@ -123,7 +123,7 @@ function paired_end() {
 function single_end() {
     echo "The full command of salmon been executed is as follows:
     $salmon quant -i $index -l A -r $R1 -p 8 --validateMappings --seqBias -o $o"
-    $salmon quant -i $index -l A -r $R1 -p 8 --validateMappings --seqBias -o $o
+    $salmon quant -i $index -l A -r $R1 -p 8 --validateMappings --seqBias --gcBias -o $o
 }
 
 # function to block the logs
@@ -157,6 +157,16 @@ function single() {
         log_block
     done < $sample_list
 }
+
+# function single() {
+#     while IFS= read -r line; do
+#         # Separating the file into read1 and read2
+#         fastq=`find $dir -maxdepth $depth -type f \( -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz" \) -print | grep -i $line*`
+#         o="$WDIR/$line"
+#         single_end
+#         log_block
+#     done < $sample_list
+# }
 
 ##########################################################################
 #                               Main
