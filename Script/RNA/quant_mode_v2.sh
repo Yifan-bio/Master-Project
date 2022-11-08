@@ -45,7 +45,7 @@ threads=4
 extension="fq.gz"
 mode="PE"
 
-while getopts ":i:f:e:o:s:t:" op; do
+while getopts ":i:f:m:e:o:s:t:" op; do
 	case $op in
 		i) index=${OPTARG} ;;
         f) dir=${OPTARG} ;;
