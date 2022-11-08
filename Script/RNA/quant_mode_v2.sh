@@ -26,6 +26,7 @@ usage() {
 	echo -e ""
 	echo -e "-i <string>		Salmon Index"		
     echo -e "-f <string>		Directory with library files"
+    echo -e "-m <string>        PE for pair-end; SE for single-end reads (default: PE)"
     echo -e ""
     echo -e "Optional parameters:"
     echo -e "-e <string>        Extension type (default: fq.gz)"
@@ -42,11 +43,13 @@ salmon="salmon"
 extra_args=""
 threads=4
 extension="fq.gz"
+mode="PE"
 
 while getopts ":i:f:e:o:s:t:" op; do
 	case $op in
 		i) index=${OPTARG} ;;
         f) dir=${OPTARG} ;;
+        m) mode=${OPTARG} ;;
         e) extension=${OPTARG} ;;
 		t) threads=${OPTARG} ;;
         o) WDIR=${OPTARG} ;;
@@ -76,45 +79,64 @@ cd ${WDIR}
 #                               Main
 ##########################################################################
 
-if [[ ${extension} == "fq.gz" ]]; then
-    for i in $(ls ${dir}/*.fq*.gz | sed 's/[1-2].fq.gz//' | uniq); do 
+# Paired-end salmon quantifcation
+if [[ ${mode} == "PE" ]]; then
     
+    # PE salmon for fq.gz files
+    if [[ ${extension} == "fq.gz" ]]; then
+        # Detecting the files name exist in directory
+        for i in $(ls ${dir}/*.fq*.gz | sed 's/[1-2].fq.gz//' | uniq); do 
         # Testing if the two files exist
         if [[ -z ${dir}/${i}1.fq.gz ]] || [[ -z ${dir}/${i}2.fq.gz ]]; then
             echo -e "Read 1 and Read 2 file cannot be detected for $i"
             usage
             exit -1
         fi
-    
-        # Output file
+        # Output folder names
         o="$WDIR/$(basename $i)"
-
-        # Reporting info
+        # Running salmon
         echo "$salmon quant -i $index -l A -1 ${i}1.fq.gz -2 ${i}2.fq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
-    done
+        done
 
-elif [[ ${extension} == "fastq.gz" ]]; then
-    for i in $(ls ${dir}/*.fastq*.gz | sed 's/[1-2].fastq.gz//' | uniq); do 
-    
+    # PE salmon for fastq.gz files
+    elif [[ ${extension} == "fastq.gz" ]]; then
+        # Detecting the files name exist in directory
+        for i in $(ls ${dir}/*.fastq*.gz | sed 's/[1-2].fastq.gz//' | uniq); do 
         # Testing if the two files exist
         if [[ -z ${dir}/${i}1.fastq.gz ]] || [[ -z ${dir}/${i}2.fastq.gz ]]; then
             echo -e "Read 1 and Read 2 file cannot be detected for $i"
             usage
             exit -1
         fi
-    
-        # Output file
+        # Output folder names
         o="$WDIR/$(basename $i)"
-
-        # Reporting info
+        # Running salmon
         echo "$salmon quant -i $index -l A -1 ${i}1.fastq.gz -2 ${i}2.fastq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
+        done
+
+    # Reporting error in file extension
+    else
+        echo -e "Only accept file extension for fastq.gz and fq.gz"
+        exit -1
+    fi
+
+# Single-end salmon quantification
+elif [[ ${mode} == "SE" ]]; then
+    # Testing if without extension can still run properly
+    # Detecting the files exist in directory
+    for i in $(ls ${dir}/*.f*q.gz); do 
+        # Output folder names
+        o="$WDIR/$(basename $i)"
+        # Running salmon
+        echo "$salmon quant -i $index -l A -r $i -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
     done
 
+# Reporting error in read type selection
 else
-    echo -e "Only accept file extension for fastq.gz and fq.gz"
-  	exit -1
-fi
+    echo -e "Enter either <PE> or <SE>"
+    exit -1
 
+fi
 ##########################################################################
 #                               End
 ##########################################################################
