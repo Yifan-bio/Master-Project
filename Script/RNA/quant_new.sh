@@ -32,7 +32,6 @@ usage() {
     echo -e "-t <string>		Number of threads to be used (default: 4)"
 	echo -e "-o <string>		Output directory with all salmon results (default: current directory)"
     echo -e "-s <string>		Directory to salmon binary file if it is not in the PATH"
-    #echo -e "-a <string>		Adding more paramters rather then default"
     echo -e 'default command: $salmon quant -i index -l A -1 R1 -2 R2 -p threads --validateMappings --gcBias --seqBias --recoverOrphans -o output'
 	exit 1
 }
@@ -52,7 +51,6 @@ while getopts ":i:f:e:o:s:t:" op; do
 		t) threads=${OPTARG} ;;
         o) WDIR=${OPTARG} ;;
         s) salmon=${OPTARG} ;;
-        a) extra_args=${OPTARG} ;;
 		*) usage ;;
 	esac
 done
@@ -60,7 +58,7 @@ shift $((OPTIND-1))
 
 # check necessary parameters
 if [[ -z $index ]] || [[ -z $dir ]]; then
-	echo -e "First two is essential"
+	echo -e "Either the index or file dir is wrong"
 	usage
 	exit -1
 fi
@@ -79,7 +77,7 @@ cd ${WDIR}
 ##########################################################################
 
 if [[ ${extension} == "fq.gz" ]]; then
-    for i in $(ls *.fq*.gz | sed 's/[1-2].fq.gz//' | uniq); do 
+    for i in $(ls ${dir}/*.fq*.gz | sed 's/[1-2].fq.gz//' | uniq); do 
   
     # Testing if the two files exist
     if [[ -z ${dir}/${i}1.fq.gz ]] || [[ -z ${dir}/${i}2.fq.gz ]]; then
@@ -89,15 +87,14 @@ if [[ ${extension} == "fq.gz" ]]; then
     fi
   
     # Output file
-    o="$WDIR/$i"
+    o="$WDIR/$(basename $i)"
 
     # Reporting info
-    echo "$salmon quant -i $index -l A -1 ${dir}/${i}1.fq.gz -2 ${dir}/${i}2.fq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
+    echo "$salmon quant -i $index -l A -1 ${i}1.fq.gz -2 ${i}2.fq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
     done
-fi
 
-if [[ ${extension} == "fastq.gz" ]]; then
-    for i in $(ls *.fastq*.gz | sed 's/[1-2].fastq.gz//' | uniq); do 
+elif [[ ${extension} == "fastq.gz" ]]; then
+    for i in $(ls ${dir}/*.fastq*.gz | sed 's/[1-2].fastq.gz//' | uniq); do 
   
     # Testing if the two files exist
     if [[ -z ${dir}/${i}1.fastq.gz ]] || [[ -z ${dir}/${i}2.fastq.gz ]]; then
@@ -107,12 +104,17 @@ if [[ ${extension} == "fastq.gz" ]]; then
     fi
   
     # Output file
-    o="$WDIR/$i"
+    o="$WDIR/$(basename $i)"
 
     # Reporting info
-    echo "$salmon quant -i $index -l A -1 ${dir}/${i}1.fastq.gz -2 ${dir}/${i}2.fastq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
+    echo "$salmon quant -i $index -l A -1 ${i}1.fastq.gz -2 ${i}2.fastq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
     done
+
+else
+    echo -e "Only accept file extension for fastq.gz and fq.gz"
+  	exit -1
 fi
+
 ##########################################################################
 #                               End
 ##########################################################################
