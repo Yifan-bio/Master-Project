@@ -4,8 +4,8 @@
 usage() {
 	echo -e "Usage: $0 [options]"
 	echo -e ""
-	echo -e "-d <string>		Direcotry of the files that want to be run"		
-	echo -e "-o <string>		Directory of the output files (If missing will be using the input directory)"
+	echo -e "-d <string>		Direcotry of the input files"		
+	echo -e "-o <string>		Directory of the output files (default: input directory)"
     echo -e "-t <string>		Number of threads to be used (default: 4)
 	                One thread uses 250MB of RAM memory and process 1 file (e.g. 10 threads will use 2500MB and process 10 file simultaneously)"
 	echo -e "-h			Print this help message and exit"
@@ -42,8 +42,8 @@ if [ -z "$outdir" ]; then
 fi
 
 #Get absolute file path, so users can use relative/absolute as they like.
-[[ ${dir} != "" ]] && Index=`realpath ${dir}`
-[[ ${outdir} != "" ]] && Index=`realpath ${outdir}`
+[[ ${dir} != "" ]] && dir=`realpath ${dir}`
+[[ ${outdir} != "" ]] && outdir=`realpath ${outdir}`
 
 # First, output the information of the run
 echo "Using $threads threads to run fastqc for the following files:"

@@ -12,7 +12,7 @@ num=0
 list=""
 
 [[ ${dir} != "" ]] && dir=`realpath ${dir}`
-[[ ${workdir} != "" ]] && dir=`realpath ${workdir}`
+[[ ${workdir} != "" ]] && workdir=`realpath ${workdir}`
 
 for i in $(ls $dir/*/aux_info/meta_info.json);
     do

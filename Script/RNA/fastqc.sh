@@ -51,8 +51,8 @@ if [ -z "$outdir" ]; then
 fi
 
 #Get absolute file path, so users can use relative/absolute as they like.
-[[ ${dir} != "" ]] && Index=`realpath ${dir}`
-[[ ${outdir} != "" ]] && Index=`realpath ${outdir}`
+[[ ${dir} != "" ]] && dir=`realpath ${dir}`
+[[ ${outdir} != "" ]] && outdir=`realpath ${outdir}`
 
 # First, output the information of the run
 echo "Using $threads threads to run fastqc for the following files:"

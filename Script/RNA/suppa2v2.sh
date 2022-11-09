@@ -49,9 +49,9 @@ if [[ -z $gtf ]] || [[ -z $input_file ]] || [[ -z $workdir ]]; then
 	exit -1
 fi
 
-[[ ${gtf} != "" ]] && Index=`realpath ${gtf}`
-[[ ${input_file} != "" ]] && Index=`realpath ${input_file}`
-[[ ${workdir} != "" ]] && Index=`realpath ${workdir}`
+[[ ${gtf} != "" ]] && gtf=`realpath ${gtf}`
+[[ ${input_file} != "" ]] && input_file=`realpath ${input_file}`
+[[ ${workdir} != "" ]] && workdir=`realpath ${workdir}`
 
 # Variables used to ease setting up
 num=0 # Helps the isolate the first column
