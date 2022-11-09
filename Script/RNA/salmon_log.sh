@@ -11,9 +11,10 @@ workdir="."
 num=0
 list=""
 
+[[ ${dir} != "" ]] && dir=`realpath ${dir}`
+[[ ${workdir} != "" ]] && dir=`realpath ${workdir}`
 
-
-for i in $dir/*/aux_info/meta_info.json;
+for i in $(ls $dir/*/aux_info/meta_info.json);
     do
     
     # Getting the name of the file
@@ -35,6 +36,6 @@ for i in $dir/*/aux_info/meta_info.json;
 
 done
 
-paste $workdir/n.txt $list > salmon_meta_info.csv
+paste $workdir/n.txt $list > salmon_meta_info.txt
 rm $workdir/n.txt $list
 
