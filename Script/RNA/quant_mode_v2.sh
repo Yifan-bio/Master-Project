@@ -98,9 +98,6 @@ if [[ ${mode} == "PE" ]]; then
         echo "$salmon quant -i $index -l A -1 ${i}1.fq.gz -2 ${i}2.fq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
         done
 
-for i in $(ls ./*.sam | sed 's/.sam//'); do /
-echo $i; done
-
     # PE salmon for fastq.gz files
     elif [[ ${extension} == "fastq.gz" ]]; then
         # Detecting the files name exist in directory
@@ -131,7 +128,7 @@ elif [[ ${mode} == "SE" ]]; then
         # Output folder names
         o="$WDIR/$(basename $i)"
         # Running salmon
-        echo "$salmon quant -i $index -l A -r $i -p $threads --validateMappings -o $o"
+        echo $salmon quant -i $index -l A -r $i -p $threads --validateMappings -o $o
     done
 
 # Reporting error in read type selection
