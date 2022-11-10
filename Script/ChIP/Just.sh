@@ -79,27 +79,28 @@ cd ${WDIR}
 # Pipeline function setup starts here
 ##############################################################
 
+# Single end read pipeline functions
+
 # 1. Trimming the reads
-function trim_QC() {
+function Single_trim() {
     # Creating a file to obtain the trimmed reads
     trim_dir=${WDIR}/trim
     [[ ! -d ${trim_dir} ]] && mkdir -p ${trim_dir}
 	# Single-end trimming the reads
-    trim_galore --output_dir $trim_dir $r
-    # Changing the reads to trimmed
+    trim_galore --fastqc --fastqc_args "--outdir $trim_dir" --output_dir $trim_dir $r
+    # Changing the read to trimmed
     r=${trim_dir}/*_trimmed.f*q.gz
-    # QC the trimmed reads
-    fastqc -j 2 --outdir $Read1 $Read2
 }
 
 # 2. Alignment
 function Single_Align_local() {
+	# Local alignment does not perform quality trim (Some case not even adapter trim)
     bowtie2 --very-sensitive-local -p 4 -X 500 -t -x $Index -U $r > ${prefix}.bowtie2.log | samtools sort -@ 4 -O bam -o ${prefix}.bam
 }
 
 # 3. remove low quality, unmapped, multimapped
 function quality_removal() {
-    picard MarkDuplicates Input=${prefix}.bam Output=${prefix}.dup.bam METRICS_FILE=${prefix}.dup.txt REMOVE_DUPLICATES=false VALIDATION_STRINGENCY=LENIENT
+    picard MarkDuplicates Input=${prefix}.bam Output=${prefix}.dup.bam METRICS_FILE=${prefix}.dup.txt
     samtools view -h -b -q 30 -@ 4 -F 3328 -o ${prefix}.final.bam ${prefix}.dup.bam
 	samtools index ${prefix}.final.bam
 }
