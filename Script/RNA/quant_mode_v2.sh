@@ -95,7 +95,7 @@ if [[ ${mode} == "PE" ]]; then
         # Output folder names
         o="$WDIR/$(basename $i)"
         # Running salmon
-        echo "$salmon quant -i $index -l A -1 ${i}1.fq.gz -2 ${i}2.fq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
+        "$salmon quant -i $index -l A -1 ${i}1.fq.gz -2 ${i}2.fq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
         done
 
     # PE salmon for fastq.gz files
@@ -111,7 +111,7 @@ if [[ ${mode} == "PE" ]]; then
         # Output folder names
         o="$WDIR/$(basename $i)"
         # Running salmon
-        echo "$salmon quant -i $index -l A -1 ${i}1.fastq.gz -2 ${i}2.fastq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
+        "$salmon quant -i $index -l A -1 ${i}1.fastq.gz -2 ${i}2.fastq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
         done
 
     # Reporting error in file extension
@@ -128,7 +128,7 @@ elif [[ ${mode} == "SE" ]]; then
         # Output folder names
         o="$WDIR/$(basename $i)"
         # Running salmon
-        echo $salmon quant -i $index -l A -r $i -p $threads --validateMappings -o $o
+        $salmon quant -i $index -l A -r $i.fastq.gz -p $threads --validateMappings -o $o
     done
 
 # Reporting error in read type selection
