@@ -23,6 +23,7 @@ usage() {
 	echo -e "-b <string>		Blacklist file from ENCODE project (boyle-lab)"
 	echo -e "-o <string>		Output directory with all result files"
 	echo -e "-m <string>		Mode for analysis; there is strict and lenient (default: strict). Strict will remove chrM,duplicate,low-quality,multimap and improper mapped. While lenient will only run remove chrM and deduplicate"
+	echo -e "-peak-caller <string>	Peak caller selection between Genrich and HMMRATAC (default: HMMRATAC)"
 	exit 1
 }
 
@@ -33,6 +34,7 @@ prefix="test"
 mode="strict"
 WDIR="."
 readlength="75"
+peak_caller="HMMRATAC"
 
 while getopts ":r1:r2:i:g:b:o:p:m:" op; do
 	case $op in
