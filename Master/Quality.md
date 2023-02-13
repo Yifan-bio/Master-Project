@@ -13,6 +13,7 @@ The following figure shows us the quality of all fastq file that were incoporate
 <br />
 **Align center:**
 ![plot](https://github.com/Yifan-bio/msc/blob/main/Master/Image/Figure%203.1.A.png)
+**Align center:**
 ![plot](https://github.com/Yifan-bio/msc/blob/main/Master/Image/Figure%203.1.B.png)
 Figure 3.1. All employed datasets present qualified sequencing quality. The graph separately represents a) the per base sequencing quality and b) the mean sequence quality of all reads. All sequencing libraries were derived from 100 ng/ml PMA treated and untreated THP-1 cells collected from PRJNA53382. Expected contamination were found for both ATAC-seq library and WGBS library.
 
