@@ -9,4 +9,4 @@ The file records all quality control performed during the selection of datasets.
 
 ## Employed dataset
 
-To assess the quality of selected datasets, all fastq files were processed through fastqc to evaluate the quality in different criterias. All employed datasets presented a relatively good sequence quality (Fig. 3.1). However, as expected, ATAC-seq preparation has introduced several biases including a high adapter sequence rate and a high duplication rate. Additional datasets and bioproject assessed during the data selection process are shown in the supplementary file 1. 
+The following figure shows us the quality of all fastq file that were incoporated during the study. WGBS and ATAC-seq has shown to suffer to the technique specific quality challenges which was accounted for during the processing of dataset. This bias includes high adapter sequencing rate and high duplication rate introudced by Tn5 tranposase during library extraction. 
