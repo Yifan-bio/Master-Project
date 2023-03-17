@@ -28,7 +28,7 @@ usage() {
 
 
 
-while getopts ":d:o:t:m:h:" op; do
+while getopts ":d:o:t:r:m:h:" op; do
 	case $op in
         d) dir=${OPTARG} ;;
         o) outdir=${OPTARG} ;;
@@ -82,6 +82,6 @@ echo "############################################################"
 
 echo "Rest is log from fastqc:"
 
-fastqc -t $threads -o $outdir $list
+fastqc -t $threads -o $outdir --memory $memory $list
 
 exit 0;
