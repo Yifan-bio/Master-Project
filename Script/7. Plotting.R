@@ -1,0 +1,80 @@
+# This script were created for plots for combining accessibility with regulators or DEGs
+# Last modified: 17 March 2023
+
+library(tidyverse)
+library(gridExtra)
+library(ggrepel)
+
+#### Plot7A Voocano plot of DEGs with regulators with accessibility changes ####
+
+Plot7A_preparation = function(RNA,RNA_with_regulators) {
+  
+  # Labeling the point for colour
+  temp = RNA
+  temp$image = "Insig"
+  temp$image[temp$Row.names %in% RNA_with_regulators$gene_id | temp$gene_name %in% RNA_with_regulators$gene_name] = "label"
+  temp = temp %>% arrange(image)
+
+  # Fixing some bias from DESeq2
+  temp$padj = ifelse(temp$padj == 0,1e-303,temp$padj)
+
+  return(temp)
+}
+
+RNA = Plot7A_preparation(RNA = RNA,RNA_with_regulators = ATAC_RNA_RE)
+
+# Plotting
+ggplot(RNA,aes(x=log2FoldChange,y=-log10(padj))) + 
+  geom_point(aes(color = image)) +
+  theme_classic() +                                                                  # make it bw rather then grey background
+  theme(text = element_text(size = 20),legend.position = "none",rect = element_rect(fill = "transparent")) +
+  scale_colour_manual(values = c("#C0C0C0","blue4")) +                       # Change the colour of dots
+  labs(x = expression("Change in Gene Expression (Log"[2]*" Fold Change)"),y = expression("-log"[10]*"(p adjusted)"),color = "Gene status") + #naming
+  scale_y_continuous(expand = c(0,0),limits = c(0,310)) +
+  ggrepel::geom_text_repel(data = subset(RNA,RNA$log2FoldChange > 7.5 & RNA$image == "label" & RNA$baseMean > 100),
+                           aes(label = gene_name),
+                           nudge_x = 15 - subset(RNA,RNA$log2FoldChange > 7.5 & RNA$image == "label" & RNA$baseMean > 100)$log2FoldChange,
+                           segment.color = "grey50",
+                           direction     = "y") +
+  ggrepel::geom_text_repel(data = subset(RNA,RNA$log2FoldChange < -5 & RNA$image == "label" & RNA$baseMean > 100),
+                           aes(label = gene_name),
+                           nudge_x = -15 + subset(RNA,RNA$log2FoldChange < -5 & RNA$image == "label" & RNA$baseMean > 100)$log2FoldChange,
+                           segment.color = "grey50",
+                           direction     = "y")
+ggsave("VPlot.png",height = 6,width = 8,dpi = 1200)
+
+#### Plot7B Bar plot of ORA ####
+
+GO_term = c("ERK1 and ERK2 cascade","leukocyte migration",
+            "leukocyte proliferation","cell chemotaxis",
+            "regulation of inflammatory response",
+            "cellular response to lipopolysaccharide",
+            "cellular response to molecule of bacterial origin")
+
+Plot7B_preparation = function(GO_term,ORA){
+  
+  temp = as.data.frame(ORA)
+  temp = temp[temp$Description %in% GO_term,]
+  return(temp)
+}
+
+temp = Plot7B_preparation(GO_term = GO_term,ORA = ORA_RNA_sigAcc)
+
+plot1 = ggplot(temp,aes(y = Description,x = Count)) + geom_bar(stat = "identity",fill = "#C0C0C0") +
+  theme_bw() + scale_x_continuous(limits = c(0,23),expand = c(0,0)) + 
+  theme(axis.title.y = element_blank(),axis.text = element_text(size = 14)) + 
+  labs(x = "Gene count")
+
+#### Plot7C cnetplot for ORA####
+GO_term = c("ERK1 and ERK2 cascade","leukocyte migration",
+            "leukocyte proliferation",
+            "regulation of inflammatory response")
+
+plot2 = cnetplot(x = ORA_RNA_sigAcc,showCategory = GO_term,circular = TRUE, colorEdge = TRUE,node_label = "gene") + 
+  scale_size_continuous(guide = "none") + 
+  theme(legend.text = element_text(size = 13),legend.position = "bottom",legend.title = element_blank())
+
+#### Export for Main Script ####
+
+ggpubr::ggarrange(plot1,plot2,widths = c(1,2),labels = c("A","B"),nrow = 2,heights =c(1,2))
+ggsave("test.png",width = 10,height = 14,dpi = 1200,bg = "white")
