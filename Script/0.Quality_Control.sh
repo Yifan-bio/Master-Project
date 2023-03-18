@@ -10,7 +10,6 @@
 # default variables
 threads=4
 depth=1
-memory=250MB
 
 # Input paramters
 usage() {
@@ -20,7 +19,6 @@ usage() {
 	echo -e "-d <string>		Direcotry of input files"		
 	echo -e "-o <string>		Directory for the output files (default: input directory(-d))"
     echo -e "-t <string>		Number of threads to be used (default: 4)"
-    echo -e "-r <string>        Memory to be used for each threads (default:250MB)"
 	echo -e "-h			Print this help message and exit"
 	echo -e "-m <string>		Maxdepth of the file to look for (default: 2; the current directory and it direct subfolders)"
 	exit 1
@@ -28,12 +26,11 @@ usage() {
 
 
 
-while getopts ":d:o:t:r:m:h:" op; do
+while getopts ":d:o:t:m:h:" op; do
 	case $op in
         d) dir=${OPTARG} ;;
         o) outdir=${OPTARG} ;;
         t) threads=${OPTARG} ;;
-        r) memory=${OPTARG} ;;
 		m) depth=${OPTARG} ;;
 		h) usage ;;
 		*) usage ;;
@@ -75,13 +72,10 @@ do
     list="$list $file"
 done
 
-echo "full command: "
-echo "fastqc -t $threads -o $outdir $list"
-
 echo "############################################################"
 
 echo "Rest is log from fastqc:"
 
-fastqc -t $threads -o $outdir $list #--memory $memory 
+fastqc -t $threads -o $outdir $list
 
 exit 0;
