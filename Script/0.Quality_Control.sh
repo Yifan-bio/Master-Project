@@ -82,6 +82,6 @@ echo "############################################################"
 
 echo "Rest is log from fastqc:"
 
-fastqc -t $threads -o $outdir --memory $memory $list
+fastqc -t $threads -o $outdir $list #--memory $memory 
 
 exit 0;
