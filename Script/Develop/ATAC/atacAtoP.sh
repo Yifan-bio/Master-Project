@@ -84,7 +84,7 @@ function trim_QC() {
     # Trim the reads
     trim_dir=${WDIR}/trim
     [[ ! -d ${trim_dir} ]] && mkdir -p ${trim_dir}
-    trim_galore --paired --retain_unpaired --output_dir $trim_dir $R1 $R2
+    trim_galore --paired --output_dir $trim_dir $R1 $R2
     # Changing the reads to trimmed
     Read1=${trim_dir}/*_val_1.f*
     Read2=${trim_dir}/*_val_2.f*
