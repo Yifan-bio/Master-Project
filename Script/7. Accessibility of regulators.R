@@ -3,7 +3,7 @@
 # Loading all required datasets
 enhancer = readRDS("../6.Regulators/active_enhancer_DEGs.rds")
 promoter = readRDS("../6.Regulators/promoter_DEGs.rds")
-ATAC = readRDS("../5.Differential_accessibility/DiffBind/DiffBind.rds")
+ATAC = readRDS("../5.Differential_accessibility/DiffBind.rds")
 RNA = readRDS("../4.Differential_expression/resdata.rds")
 
 #### Preparation of datasets for annotation ####
@@ -23,12 +23,18 @@ row.names(ATAC) = 1:length(ATAC$Chr)
 library(annotatr)
 library(GenomicRanges)
 library(tidyverse)
+library(clusterProfiler)
 
 ATAC_enhancer = annotatr::annotate_regions(GRanges(enhancer),GRanges(ATAC))
 ATAC_enhancer = as.data.frame(ATAC_enhancer)
+ATAC_enhancer$con = "enhancer"
 ATAC_promoter = annotatr::annotate_regions(GRanges(promoter),GRanges(ATAC))
 ATAC_promoter = as.data.frame(ATAC_promoter)
-ATAC_RNA_RE = rbind(ATAC_promoter %>% select(seqnames:end,gene_name,gene_id),ATAC_enhancer %>% select(seqnames:end,gene_name,gene_id))
+ATAC_promoter$con = "promoter"
+
+ATAC_RNA_RE = rbind(ATAC_promoter %>% select(seqnames:end,gene_name,gene_id,annot.Fold,con),ATAC_enhancer %>% select(seqnames:end,gene_name,gene_id,annot.Fold,con))
+ATAC_RNA_RE$gene_name[ATAC_RNA_RE$gene_name == "CCL3L3"] = "CCL3L1"
+ATAC_RNA_RE = ATAC_RNA_RE %>% distinct(seqnames,gene_name,gene_id,annot.Fold,con,.keep_all = T)
 
 #### Isolate DEG results with regulators experiencing accessibility changes ####
 
@@ -60,3 +66,7 @@ ORA_RNA_sigAcc = ORA_GO(RNA_sigAcc)
 temp = rbind(ATAC_enhancer %>% select(annot.seqnames:annot.end),ATAC_promoter %>% select(annot.seqnames:annot.end))
 temp = temp %>% distinct(annot.seqnames,annot.start,annot.end)
 saveRDS(temp,"DiffBindPeak_with_DEG.rds")                                      
+
+
+
+

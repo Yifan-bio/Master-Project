@@ -1,13 +1,22 @@
-# This script is put together to allow the running of differential expression analysis using RNA-seq
-# Last modification: 14 March 2023
+# This script is put together to all R scripts
+# Last modification: 2 April 2023
+
+# Input
+gtf_file = commandArgs(trailingOnly = TRUE)
 
 
+####  1. RNA-seq ####
 
-#### Preparation of tximport dataframes ####
+# Loading of required packages
 
-library(GenomicFeatures)
+library("GenomicFeatures")
+library("tximport")
+library("DESeq2")
+library("clusterProfiler")
+library("org.Hs.eg.db")
 
-# function to create the tx2gene file
+# 1.1 Creation of index file
+
 tx2gene_creation = function(gtf_file) {
   # Intaking the gtf file as binary
   temp1 = GenomicFeatures::makeTxDbFromGFF(file = gtf_file)
@@ -24,10 +33,10 @@ tx2gene_creation = function(gtf_file) {
 
 tx2gene = tx2gene_creation('../../support_doc/Gencode/gencode.v40.annotation.gtf.gz')
 
-
+# 1.2 Inclusion 
 #### Importing Result from salmon using tximport #### 
 
-library("tximport")
+
 
 files = c('./Input/0hr_rep1/quant.sf',
           './Input/0hr_rep2/quant.sf',
@@ -52,7 +61,7 @@ rownames(sampleTable) <- colnames(txi.salmon$counts)
 
 #### Running DESeq2 #####
 
-library("DESeq2")
+
 
 dds <- DESeqDataSetFromTximport(txi = txi.salmon, 
                                 colData = sampleTable,
@@ -72,7 +81,7 @@ dds <- DESeq(object = dds,
 result = lfcShrink(dds = dds,
                    coef = "condition_treated_vs_control",
                    type = "apeglm"
-                   )
+)
 
 #### Adding annotation to DESeq2 results #####
 
@@ -96,7 +105,7 @@ gene_annot <- function(result = result,dds = dds,gtf_file) {
   
   # Getting gene stable version number
   res$Row.names <- gsub("(ENSG[0-9]+)\\.[0-9]+", "\\1",res$Row.names) 
- 
+  
   return(res)
 }
 
@@ -109,8 +118,7 @@ sig = resdata[resdata$padj < 0.05 & abs(resdata$log2FoldChange) > 2,]
 
 #### Over-enrichment Analysis for GO terms ####
 
-library("clusterProfiler")
-library("org.Hs.eg.db")
+
 
 ORA_GO = function(background,sig_gene,term = 'ALL') {
   # Setting the universal genes

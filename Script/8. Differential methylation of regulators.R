@@ -5,7 +5,7 @@ library(methylKit)
 
 #### Intaking peaks regions ####
 
-ATAC = readRDS("../5.Differential_accessibility/DiffBind/DiffBind_reaks.rds")
+ATAC = readRDS("../5.Differential_accessibility/DiffBind_reaks.rds")
 ATAC = GenomicRanges::GRanges(ATAC)
 
 #### Running differential methylation in peak regions ####
@@ -36,7 +36,7 @@ myDiff=calculateDiffMeth(meth,test = "fast.fisher",adjust = "fdr")
 
 library(tidyverse)
 
-ATAC = readRDS("../5.Differential_accessibility/DiffBind/DiffBind_reaks.rds")
+ATAC = readRDS("../5.Differential_accessibility/DiffBind_reaks.rds")
 myDiff = data.frame(myDiff)
 myDiff = merge(x = myDiff,
                y = ATAC,

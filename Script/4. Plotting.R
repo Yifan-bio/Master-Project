@@ -79,10 +79,49 @@ ggplot(temp,aes(x=Pathways)) +
 
 ggsave(filename = "Plot4B.png",plot = x,dpi = 1200,width = 6.8,height = 4)
 
-#### Plot4C ####
+#### Plot4C Transcript TPM distribution ####
 
+x = txi.salmon[["abundance"]]
+x = data.frame(x)
+colnames(x) = c("Untreat_1","Untreat_2","Treat_1","Treat_2")
 
+# Converting to long dataframe and remove NULL values
+x$gene = row.names(x)
+x = x %>% pivot_longer(!gene,names_to = "replicate",values_to = "abundance")
+x = x %>% filter(abundance != 0)
 
+# Prepring for facet
+x$condition = (do.call('rbind', strsplit(as.character(x$replicate),'_',fixed=TRUE)))[,1]
+x$rep = (do.call('rbind', strsplit(as.character(x$replicate),'_',fixed=TRUE)))[,2]
+
+ggplot(x,aes(x = log10(abundance),y = -0.02)) +
+  # Horizontal boxplot
+  ggstance::geom_boxploth(aes(fill = condition),width = 0.03) +
+  # density plot
+  geom_density(aes(x = log10(abundance)),inherit.aes = F) +
+  facet_grid(rows = vars(rep),cols = vars(condition)) +
+  scale_fill_discrete() +
+  geom_hline(yintercept = 0)+
+  labs(y = "Proportion of genes",x = "log10(TPM)")
+
+ggsave("Plot4C.png",width = 7,height = 5)
+
+#### Plot4D Biomarkers ####
+
+x = resdata_2 %>% select(gene_name,V1:V4)
+colnames(x) = c("Gene","Untreat1","Untreat2","Treat1","Treat2")
+
+# Select gene to plot
+x = x[x$Gene %in% c("CD14","APOE","ICAM1","ITGAM","SPP1","CSF1","CSF1R"),]
+x = x %>% pivot_longer(!Gene,names_to = "Rep",values_to = "abundance")
+x$rep = gsub('[[:digit:]]+', '',x$Rep)
+
+ggplot(x,aes(x = reorder(rep,+abundance),y = abundance)) + 
+  stat_summary(geom = "bar", fun = mean, position = "dodge",show.legend = FALSE) +
+  stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge") +
+  facet_wrap(~ Gene,ncol = 4,scales = "free") +
+  theme_bw() +
+  labs(x=NULL,y=NULL)
 
 #### Plot for Main Script ####
 

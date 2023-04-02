@@ -12,14 +12,14 @@ sampleTbl = data.frame(sampleID = c('control1','control2','treated1','treated2')
                        Factor = 'PMA',
                        Condition= c('Control','Control','Treated','Treated'),
                        Replicate = c("1","2","1","2"),
-                       bamReads = c('../Input/bam/untreat_rep1.rmChrM.dedup.filter.bam',
-                                    '../Input/bam/untreat_rep2.rmChrM.dedup.filter.bam',
-                                    '../Input/bam/treat_rep1.rmChrM.dedup.filter.bam',
-                                    '../Input/bam/treat_rep2.rmChrM.dedup.filter.bam'),
-                       Peaks = c('../Input/HMM_removeHC/untreat_rep1.gappedPeak',
-                                 '../Input/HMM_removeHC/untreat_rep2.gappedPeak',
-                                 '../Input/HMM_removeHC/treat_rep1.gappedPeak',
-                                 '../Input/HMM_removeHC/treat_rep2.gappedPeak'),
+                       bamReads = c('./Input/bam/untreat_rep1.rmChrM.dedup.filter.bam',
+                                    './Input/bam/untreat_rep2.rmChrM.dedup.filter.bam',
+                                    './Input/bam/treat_rep1.rmChrM.dedup.filter.bam',
+                                    './Input/bam/treat_rep2.rmChrM.dedup.filter.bam'),
+                       Peaks = c('./Input/HMM_removeHC/untreat_rep1.gappedPeak',
+                                 './Input/HMM_removeHC/untreat_rep2.gappedPeak',
+                                 './Input/HMM_removeHC/treat_rep1.gappedPeak',
+                                 './Input/HMM_removeHC/treat_rep2.gappedPeak'),
                        ScoreCol = 13,
                        LowerBetter = FALSE
                        )
@@ -34,8 +34,6 @@ ATAC_count <- dba.count(ATAC,minOverlap = 2,
                         )
 
 #### Differential Accessibility Analysis using DiffBind wrapped around DESeq2 ####
-
-library(DiffBind)
 
 # Differential accessibility analysis
 ATAC_contrast <- dba.contrast(ATAC_count, categories=DBA_CONDITION,minMembers = 2)
@@ -55,3 +53,18 @@ ATAC_report <- dba.report(DBA = ATAC_analyze,
 library(tidyverse)
 
 Diff.bind.sig = ATAC_report %>% dplyr::filter(abs(Fold) > 2 & FDR < 0.01)
+rownames(Diff.bind.sig) = 1:nrow(Diff.bind.sig)
+
+#### Annotating the regions ####
+
+library(annotatr)
+# Preping annotations
+read_annotations(con="../6.Regulators/active_enhancer.bed",genome = "hg38",name="Genhancer",format = "bed")
+annotatr_annotations=build_annotations(genome = 'hg38',annotations = c('hg38_custom_Genhancer','hg38_basicgenes'))
+
+# Annotating the results
+annotated = annotate_regions(regions = GRanges(Diff.bind.sig),
+                             annotations = annotatr_annotations, 
+                             ignore.strand = TRUE,
+                             quiet = FALSE) 
+annotated = as.data.frame(annotated)
