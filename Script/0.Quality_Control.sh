@@ -7,13 +7,20 @@
 #
 #####################################################################################
 
+
+##################################################################################
+#
+# Parameter setups
+#
+##################################################################################
+
 # default variables
 threads=4
 depth=1
 
-# Input paramters
+# help message
 usage() {
-    echo -e "Please note, this script is devlepoed under fastqc v0.12.1"
+    echo -e "Please note, this script is devlepoed under fastqc v0.11.9"
 	echo -e "Usage: $0 [options]"
 	echo -e ""
 	echo -e "-d <string>		Direcotry of input files"		
@@ -24,8 +31,7 @@ usage() {
 	exit 1
 }
 
-
-
+# Configuring in the parameters from the input in command lines
 while getopts ":d:o:t:m:h:" op; do
 	case $op in
         d) dir=${OPTARG} ;;
@@ -40,7 +46,7 @@ shift $((OPTIND-1))
 
 # check necessary parameters
 if [[ -z $dir ]]; then
-	echo -e "Guess which ONE is required"
+	echo -e "The directory of input files in missing"
 	usage
 	exit -1
 fi
@@ -54,18 +60,24 @@ fi
 [[ ${dir} != "" ]] && dir=`realpath ${dir}`
 [[ ${outdir} != "" ]] && outdir=`realpath ${outdir}`
 
+##################################################################################
+#
+# Main
+#
+##################################################################################
+
 # First, output the information of the run
 echo "Using $threads threads, each using $memory, to run fastqc for the following files:"
 
-# Find all files under the currect directory and sub directory with the .fastq.gz,.fastq,fq,fq.gz extension
+# Creating a list to store the files that need to be processed through fastqc
+list=""
+
+# A function to locate all fastq or fq files under the queried directory 
 function all_fq() {
     find $dir -maxdepth $depth -name "*.fastq.gz" -o -name "*.fastq" -o -name "*.fq" -o -name "*.fq.gz"
 }
 
-# Creating the variable for putting all of the files to run
-list=""
-
-# Runs all the fastqc on the files found in the all_fq function
+# Adding all the fastq / fq files found in the queired directory to the running list
 for file in $(all_fq);
 do
     echo "$file"
@@ -73,9 +85,16 @@ do
 done
 
 echo "############################################################"
+echo "#  #####      #      #    #   #####   #####" 
+echo "#  #    #   #   #    #    #   #       #    "
+echo "#  #####   #######   #    #   #####   #### "
+echo "#  #       #     #   #    #       #   #    "
+echo "#  #       #     #    ####    #####   #####"
+echo ""
+echo "Rest is log from fastqc"
+echo "############################################################"
 
-echo "Rest is log from fastqc:"
-
+# Running fastqc with multiple files in parallel
 fastqc -t $threads -o $outdir $list
 
 exit 0;
