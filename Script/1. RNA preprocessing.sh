@@ -36,13 +36,14 @@ usage() {
 	exit 1
 }
 
-#Initiate parameters with NULL
-WDIR="."
+# Adjustable default paramters 
+DIR="."
 salmon="salmon"
 extra_args=""
 threads=4
 extension="fq.gz"
 
+# Adding in the paramters from command line
 while getopts ":i:f:e:o:s:t:" op; do
 	case $op in
 		i) index=${OPTARG} ;;
@@ -56,41 +57,45 @@ while getopts ":i:f:e:o:s:t:" op; do
 done
 shift $((OPTIND-1))
 
-# check necessary parameters
+# Verify if the essential directory are added (index and read files)
 if [[ -z $index ]] || [[ -z $dir ]]; then
 	echo -e "Either the index or file dir is wrong"
 	usage
 	exit -1
 fi
 
-#Get absolute file path, so users can use relative/absolute as they like.
+# Get absolute file path, so users can use relative/absolute as they like.
 [[ ${index} != "" ]] && index=`realpath ${index}`
 [[ ${dir} != "" ]] && dir=`realpath ${dir}`
 [[ ${WDIR} != "" ]] && WDIR=`realpath ${WDIR}`
 
-# make directories if not exist and enter working directory.
+# If the output directory is specified and does not exist then create this folder.
 [[ ! -d ${WDIR} ]] && mkdir -p ${WDIR}
-cd ${WDIR}
 
 ##########################################################################
 #                               Main
 ##########################################################################
 
+# There is two type of fastq file extension which is fq or fastq, two if loops accounts both.
+
 if [[ ${extension} == "fq.gz" ]]; then
+    
+    # This is for paired end file, this will extract all fq file names (following ENA format)
+    # and get the pairs. Then it will input one sample pair each time.
     for i in $(ls ${dir}/*.fq*.gz | sed 's/[1-2].fq.gz//' | uniq); do 
     
-        # Testing if the two files exist
+        # Testing if the two both Read 1 and Read 2 exist in ENA format
         if [[ -z ${dir}/${i}1.fq.gz ]] || [[ -z ${dir}/${i}2.fq.gz ]]; then
             echo -e "Read 1 and Read 2 file cannot be detected for $i"
             usage
             exit -1
         fi
     
-        # Output file
+        # Setting the output folder for salmon on this sample
         o="$WDIR/$(basename $i)"
 
-        # Reporting info
-        echo "$salmon quant -i $index -l A -1 ${i}1.fq.gz -2 ${i}2.fq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
+        # Running salmon alignment. We have included several paramters to correct bias.
+        $salmon quant -i $index -l A -1 ${i}1.fq.gz -2 ${i}2.fq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o
     done
 
 elif [[ ${extension} == "fastq.gz" ]]; then
@@ -107,7 +112,7 @@ elif [[ ${extension} == "fastq.gz" ]]; then
         o="$WDIR/$(basename $i)"
 
         # Reporting info
-        echo "$salmon quant -i $index -l A -1 ${i}1.fastq.gz -2 ${i}2.fastq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o"
+        $salmon quant -i $index -l A -1 ${i}1.fastq.gz -2 ${i}2.fastq.gz -p $threads --validateMappings --gcBias --seqBias --recoverOrphans -o $o
     done
 
 else

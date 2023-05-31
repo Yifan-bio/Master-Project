@@ -32,25 +32,27 @@ tx2gene = tx2gene_creation('../../support_doc/Gencode/gencode.v40.annotation.gtf
 # remove(tx2gene)
 
 #### Importing Result from salmon using tximport #### 
+# Result from salmon will be imported into R using tximport. The result will require in put 
 
 library("tximport")
 
+# Listing the location of each salmon output count file (quant.sf files)
 files = c('./Input/0hr_rep1/quant.sf',
           './Input/0hr_rep2/quant.sf',
           './Input/24hr_rep1/quant.sf',
           './Input/24hr_rep2/quant.sf')
 
-# Import files into tximport
+# Importing salmon files into R and combinding the transcript counts into gene counts
 txi.salmon <- tximport(files = files,
                        type = "salmon",
                        txOut = FALSE,
                        tx2gene = tx2gene,
                        ignoreAfterBar = T)
 
-# Creating a table with the metainfo
+# Creating a table to specficy the condition of each file.
 sampleTable <- data.frame(condition = factor(rep(c("control", "treated"),each = 2)))
 
-# Combining the metainfo with the tximport results
+# Connecting the conditions with the file imported using tximport.
 rownames(sampleTable) <- colnames(txi.salmon$counts) 
 
 # remove(files,tx2gene)
@@ -60,6 +62,7 @@ rownames(sampleTable) <- colnames(txi.salmon$counts)
 
 library("DESeq2")
 
+# 
 dds <- DESeqDataSetFromTximport(txi = txi.salmon, 
                                 colData = sampleTable,
                                 design = ~ condition)
@@ -79,6 +82,8 @@ result = lfcShrink(dds = dds,
                    coef = "condition_treated_vs_control",
                    type = "apeglm"
                    )
+
+# remove(txi.salmon,sampleTable,keep)
 
 #### Adding annotation to DESeq2 results #####
 
@@ -112,6 +117,7 @@ resdata = resdata[resdata$baseMean > 20,]
 
 sig = resdata[resdata$padj < 0.05 & abs(resdata$log2FoldChange) > 2,]
 
+# remove(dds,result,)
 
 #### Over-enrichment Analysis for GO terms ####
 
