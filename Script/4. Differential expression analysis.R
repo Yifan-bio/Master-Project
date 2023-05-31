@@ -1,9 +1,14 @@
 # This script is put together to allow the running of differential expression analysis using RNA-seq
 # Last modification: 14 March 2023
 
+# Each section contains a # remove function that can remove function / objects that will not be used in the remaining script
+
 
 
 #### Preparation of tximport dataframes ####
+# Salmon output read count per transcript. But we want to do differential gene analysis 
+# which requires genecount. This section preps a reference table for tximport allowing
+# the transcript count to be summarised to the correct gene.
 
 library(GenomicFeatures)
 
@@ -24,6 +29,7 @@ tx2gene_creation = function(gtf_file) {
 
 tx2gene = tx2gene_creation('../../support_doc/Gencode/gencode.v40.annotation.gtf.gz')
 
+# remove(tx2gene)
 
 #### Importing Result from salmon using tximport #### 
 
