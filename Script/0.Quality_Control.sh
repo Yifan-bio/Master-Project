@@ -44,6 +44,14 @@ while getopts ":d:o:t:m:h:" op; do
 done
 shift $((OPTIND-1))
 
+# Check if fastqc packages exists
+if command -v fastqc > /dev/null; then
+    echo "Found fastqc command"
+else
+    echo "fastqc were not detected"
+	exit -1
+fi    
+
 # check necessary parameters
 if [[ -z $dir ]]; then
 	echo -e "The directory of input files in missing"
@@ -51,7 +59,7 @@ if [[ -z $dir ]]; then
 	exit -1
 fi
 
-# Output file in the same directory as the input file
+# Output file in the same directory as the input file if not specified
 if [ -z "$outdir" ]; then
 	outdir=$dir
 fi
@@ -84,17 +92,16 @@ do
     list="$list $file"
 done
 
-echo "############################################################"
-echo "#  #####      #      #    #   #####   #####" 
-echo "#  #    #   #   #    #    #   #       #    "
-echo "#  #####   #######   #    #   #####   #### "
-echo "#  #       #     #   #    #       #   #    "
-echo "#  #       #     #    ####    #####   #####"
-echo ""
-echo "Rest is log from fastqc"
-echo "############################################################"
-
 # Running fastqc with multiple files in parallel
 fastqc -t $threads -o $outdir $list
+
+# Generate multiqc result for all the fastqc file if multiqc exists
+if command -v multiqc > /dev/null; then
+    multiqc $outdir
+	echo "Multiqc result generated"
+else
+    echo "End of fastqc analysis. Multiqc were not detected."
+fi    
+
 
 exit 0;
