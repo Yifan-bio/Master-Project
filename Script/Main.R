@@ -1,22 +1,9 @@
-# This script is put together to all R scripts
-# Last modification: 2 April 2023
+# This script is put together to allow the running of differential expression analysis using RNA-seq
+# Last modification: 14 March 2023
 
-# Input
-gtf_file = commandArgs(trailingOnly = TRUE)
+#### Function ####
 
-
-####  1. RNA-seq ####
-
-# Loading of required packages
-
-library("GenomicFeatures")
-library("tximport")
-library("DESeq2")
-library("clusterProfiler")
-library("org.Hs.eg.db")
-
-# 1.1 Creation of index file
-
+# function to create the tx2gene file
 tx2gene_creation = function(gtf_file) {
   # Intaking the gtf file as binary
   temp1 = GenomicFeatures::makeTxDbFromGFF(file = gtf_file)
@@ -31,60 +18,7 @@ tx2gene_creation = function(gtf_file) {
   return(temp)
 }
 
-tx2gene = tx2gene_creation('../../support_doc/Gencode/gencode.v40.annotation.gtf.gz')
-
-# 1.2 Inclusion 
-#### Importing Result from salmon using tximport #### 
-
-
-
-files = c('./Input/0hr_rep1/quant.sf',
-          './Input/0hr_rep2/quant.sf',
-          './Input/24hr_rep1/quant.sf',
-          './Input/24hr_rep2/quant.sf')
-
-# Import files into tximport
-txi.salmon <- tximport(files = files,
-                       type = "salmon",
-                       txOut = FALSE,
-                       tx2gene = tx2gene,
-                       ignoreAfterBar = T)
-
-# Creating a table with the metainfo
-sampleTable <- data.frame(condition = factor(rep(c("control", "treated"),each = 2)))
-
-# Combining the metainfo with the tximport results
-rownames(sampleTable) <- colnames(txi.salmon$counts) 
-
-# remove(files,tx2gene)
-
-
-#### Running DESeq2 #####
-
-
-
-dds <- DESeqDataSetFromTximport(txi = txi.salmon, 
-                                colData = sampleTable,
-                                design = ~ condition)
-
-# The pre-deseq2 filering step (Temp removed)
-# keep <- rowMeans(counts(dds)) > 20 & rowSums(counts(dds) == 0) != 3 |
-#        rowSums(counts(dds)[,1:2]) < 1 &  rowSums(counts(dds)) > 25 |
-#        rowSums(counts(dds)[,3:4]) < 1 &  rowSums(counts(dds)) > 25  
-# dds <- dds[keep,]
-
-# Running the differential expression analysis 
-dds <- DESeq(object = dds,
-             test = 'Wald')
-
-# Getting the results out of DEseq2
-result = lfcShrink(dds = dds,
-                   coef = "condition_treated_vs_control",
-                   type = "apeglm"
-)
-
-#### Adding annotation to DESeq2 results #####
-
+# Annotating genes based on gtf files
 gene_annot <- function(result = result,dds = dds,gtf_file) {
   
   # Creating a ID to symbol conversion table
@@ -109,6 +43,49 @@ gene_annot <- function(result = result,dds = dds,gtf_file) {
   return(res)
 }
 
+#### RNA-seq analysis ####
+
+library("GenomicFeatures")
+library("tximport")
+library("DESeq2")
+
+# Creating a conversion table for transcript to gene
+tx2gene = tx2gene_creation('../../support_doc/Gencode/gencode.v40.annotation.gtf.gz')
+
+# Listing the location of each salmon output count file (quant.sf files)
+files = c('./Input/0hr_rep1/quant.sf',
+          './Input/0hr_rep2/quant.sf',
+          './Input/24hr_rep1/quant.sf',
+          './Input/24hr_rep2/quant.sf')
+
+# Importing salmon files into R and combining the transcript counts into gene counts
+txi.salmon <- tximport(files = files,
+                       type = "salmon",
+                       txOut = FALSE,
+                       tx2gene = tx2gene,
+                       ignoreAfterBar = T)
+
+# Creating a table to specficy the condition of each file.
+sampleTable <- data.frame(condition = factor(rep(c("control", "treated"),each = 2)))
+
+# Connecting the conditions with the file imported using tximport.
+rownames(sampleTable) <- colnames(txi.salmon$counts) 
+
+# Importing to DESeq2 format
+dds <- DESeqDataSetFromTximport(txi = txi.salmon, 
+                                colData = sampleTable,
+                                design = ~ condition)
+
+# Running the differential expression analysis 
+dds <- DESeq(object = dds,
+             test = 'Wald')
+
+# Getting the results out of DEseq2
+result = lfcShrink(dds = dds,
+                   coef = "condition_treated_vs_control",
+                   type = "apeglm"
+)
+
 resdata = gene_annot(result = result,dds = dds,gtf_file = "../support_doc/Gencode/gencode.v40.annotation.gtf.gz")
 
 resdata = resdata[resdata$baseMean > 20,]
@@ -116,28 +93,58 @@ resdata = resdata[resdata$baseMean > 20,]
 sig = resdata[resdata$padj < 0.05 & abs(resdata$log2FoldChange) > 2,]
 
 
-#### Over-enrichment Analysis for GO terms ####
+#### ATAC-seq ####
 
+library(DiffBind)
+library(tidyverse)
+library(annotatr)
 
+# Putting in the metadata
+sampleTbl = data.frame(sampleID = c('control1','control2','treated1','treated2'),
+                       Cell = 'THP1',
+                       Factor = 'PMA',
+                       Condition= c('Control','Control','Treated','Treated'),
+                       Replicate = c("1","2","1","2"),
+                       bamReads = c('./Input/bam/untreat_rep1.rmChrM.dedup.filter.bam',
+                                    './Input/bam/untreat_rep2.rmChrM.dedup.filter.bam',
+                                    './Input/bam/treat_rep1.rmChrM.dedup.filter.bam',
+                                    './Input/bam/treat_rep2.rmChrM.dedup.filter.bam'),
+                       Peaks = c('./Input/HMM_removeHC/untreat_rep1.gappedPeak',
+                                 './Input/HMM_removeHC/untreat_rep2.gappedPeak',
+                                 './Input/HMM_removeHC/treat_rep1.gappedPeak',
+                                 './Input/HMM_removeHC/treat_rep2.gappedPeak'),
+                       ScoreCol = 13,
+                       LowerBetter = FALSE
+)
 
-ORA_GO = function(background,sig_gene,term = 'ALL') {
-  # Setting the universal genes
-  BG = as.character(background$Row.names)
-  # Creating the genelist for ORA
-  genelist = sig_gene$log2FoldChange
-  names(genelist) = sig_gene$Row.names
-  genelist = sort(genelist,decreasing = TRUE)
-  gene = names(genelist)[abs(genelist) > 2]
-  # Enrichment analysis using clusterProfiler
-  res <- enrichGO(gene = gene, 
-                  universe = BG,
-                  OrgDb = 'org.Hs.eg.db',
-                  ont = term,
-                  keyType = 'ENSEMBL',
-                  pAdjustMethod = "BH",
-                  pvalueCutoff = 0.01,
-                  readable = TRUE)
-  return(res)
-}
+# Importing the data
+ATAC <- dba(sampleSheet=sampleTbl)
 
-ORA = ORA_GO(background = resdata,sig_gene = sig,term = "ALL")
+# Perform count on each peak using the BAM file
+ATAC_count <- dba.count(ATAC,minOverlap = 2,
+                        score = DBA_SCORE_NORMALIZED,
+                        bUseSummarizeOverlaps = TRUE
+)
+
+# Differential accessibility analysis
+ATAC_contrast <- dba.contrast(ATAC_count, categories=DBA_CONDITION,minMembers = 2)
+
+# Perform differential affinitiy analysis
+ATAC_analyze <- dba.analyze(ATAC_contrast,method = DBA_ALL_METHODS)
+
+# Extracting the results
+ATAC_report <- dba.report(DBA = ATAC_analyze,
+                          DataType = DBA_DATA_FRAME,
+                          method = DBA_DESEQ2,
+                          contrast = 1,
+                          th = 1)
+
+#Extracting usable regions
+Diff.bind.sig = ATAC_report %>% dplyr::filter(abs(Fold) > 2 & FDR < 0.01)
+rownames(Diff.bind.sig) = 1:nrow(Diff.bind.sig)
+
+#### Genomic annotation creation ####
+
+library("rtracklayer")
+
+gtf_file = "../../../"
