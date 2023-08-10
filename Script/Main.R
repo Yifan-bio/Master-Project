@@ -66,35 +66,37 @@ intron <- GenomicFeatures::intronsByTranscript(gene_gtf)
 
 remove(gene_gtf)
 
-#### Identify enhancers ####
+#### Importing enhancer regions ####
 # Some genes share multiple gene name so we will need to also use ensembl id as a confirmation
 
-active_enhancer = function(geneHancer,H3K27ac) {
+enhancer = ""
+marker = ""
+
+active_enhancer = function(geneHancer,histone = NULL) {
   
   # Importing Enhancer regions
   enhancer = read.delim(geneHancer,header = FALSE,col.names = c("chr","start","end","Genhancer","gene_name","tech"))
   enhancer = GRanges(enhancer)
   
-  # Importing H3K27ac markers
-  marker = rtracklayer::import.bed(H3K27ac)
-  #marker = read.delim(marker,header = FALSE,col.names = c("chr","start","end"))
+  # Get active enhancer using histone marker
+  if (is.null(histone) = FALSE) {
+    # Importing histone marker locations that want to look at
+    marker = rtracklayer::import.bed(histone)
+    
+    # Identify active enhancer
+    active_enhancer = IRanges::subsetByOverlaps(x = enhancer,ranges = marker)
   
-  # Identify active enhancer
-  active_enhancer = IRanges::subsetByOverlaps(x = enhancer,ranges = marker)
-  
-  return(active_enhancer)
+    return(active_enhancer)
+  }
+
+  return(enhancer)
+
 }
 
-active_enhancer = active_enhancer(geneHancer = "./Genhancer/geneHancer_format fix.bed",H3K27ac = "./H3K27ac/H3K27ac.bed")
+active_enhancer = active_enhancer(geneHancer = enhancer,histone = marker)
 
 
-# Creating gene regions
-
-
-
-
-
-
+#### Function ####
 
 # Annotating genes based on gtf files
 gene_annot <- function(result = result,dds = dds,gtf_file) {
@@ -127,9 +129,6 @@ library("GenomicFeatures")
 library("tximport")
 library("DESeq2")
 
-# Creating a conversion table for transcript to gene
-tx2gene = tx2gene_creation('../../support_doc/Gencode/gencode.v40.annotation.gtf.gz')
-
 # Listing the location of each salmon output count file (quant.sf files)
 files = c('./Input/0hr_rep1/quant.sf',
           './Input/0hr_rep2/quant.sf',
@@ -143,7 +142,7 @@ txi.salmon <- tximport(files = files,
                        tx2gene = tx2gene,
                        ignoreAfterBar = T)
 
-# Creating a table to specficy the condition of each file.
+# Creating a table to specific the condition of each file.
 sampleTable <- data.frame(condition = factor(rep(c("control", "treated"),each = 2)))
 
 # Connecting the conditions with the file imported using tximport.
@@ -164,7 +163,7 @@ result = lfcShrink(dds = dds,
                    type = "apeglm"
 )
 
-resdata = gene_annot(result = result,dds = dds,gtf_file = "../support_doc/Gencode/gencode.v40.annotation.gtf.gz")
+resdata = gene_annot(result = result,dds = dds,gtf_file = gtf_file)
 
 resdata = resdata[resdata$baseMean > 20,]
 
