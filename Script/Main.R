@@ -1,9 +1,20 @@
 # This script is put together to allow the running of differential expression analysis using RNA-seq
 # Last modification: 14 March 2023
 
-#### Function ####
+library(tidyverse)
 
-# function to create the tx2gene file
+#### Importing information from gtf file ####
+
+gtf_file = ""
+
+library(rtracklayer)
+library(plyranges)
+library(GenomicFeatures)
+library(GenomicRanges)
+
+# Creating the tx2gene variable for RNA-seq
+# tximport uses the tx2gene object to perform trasncript to gene conversion
+
 tx2gene_creation = function(gtf_file) {
   # Intaking the gtf file as binary
   temp1 = GenomicFeatures::makeTxDbFromGFF(file = gtf_file)
@@ -17,6 +28,73 @@ tx2gene_creation = function(gtf_file) {
                                keytype = 'TXNAME')
   return(temp)
 }
+
+tx2gene = tx2gene_creation(gtf_file = gtf_file)
+
+# Creating regions with promoter
+
+promoter_gtf = function(gtf_file) {
+  
+  # Importing the gtf file
+  temp <- rtracklayer::import.gff(gtf_file)
+  
+  temp = temp[(elementMetadata(temp)[,"type"] == "transcript")]
+  
+  # Isolate TSS from the transcript
+  start(temp) <- ifelse(strand(temp) == "+",
+                        yes = start(temp),
+                        no = end(temp))
+  end(temp) <- ifelse(strand(temp) == "+",
+                      yes = start(temp),
+                      no = end(temp))
+
+  # Getting the promoter regions
+  temp = plyranges::flank_upstream(x = temp,width = 3000)
+  temp = plyranges::shift_downstream(x = temp,shift = 1000)
+
+  return(temp)
+}
+
+promoter = promoter_gtf(gtf_file = gtf_file)
+
+# Identify exon and intron
+
+gene_gtf = GenomicFeatures::makeTxDbFromGFF(gtf_file)
+
+exon <- exonsBy(gene_gtf,by = "tx")
+intron <- GenomicFeatures::intronsByTranscript(gene_gtf)
+
+remove(gene_gtf)
+
+#### Identify enhancers ####
+# Some genes share multiple gene name so we will need to also use ensembl id as a confirmation
+
+active_enhancer = function(geneHancer,H3K27ac) {
+  
+  # Importing Enhancer regions
+  enhancer = read.delim(geneHancer,header = FALSE,col.names = c("chr","start","end","Genhancer","gene_name","tech"))
+  enhancer = GRanges(enhancer)
+  
+  # Importing H3K27ac markers
+  marker = rtracklayer::import.bed(H3K27ac)
+  #marker = read.delim(marker,header = FALSE,col.names = c("chr","start","end"))
+  
+  # Identify active enhancer
+  active_enhancer = IRanges::subsetByOverlaps(x = enhancer,ranges = marker)
+  
+  return(active_enhancer)
+}
+
+active_enhancer = active_enhancer(geneHancer = "./Genhancer/geneHancer_format fix.bed",H3K27ac = "./H3K27ac/H3K27ac.bed")
+
+
+# Creating gene regions
+
+
+
+
+
+
 
 # Annotating genes based on gtf files
 gene_annot <- function(result = result,dds = dds,gtf_file) {
