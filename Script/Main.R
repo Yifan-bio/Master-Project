@@ -165,9 +165,9 @@ result = lfcShrink(dds = dds,
 
 resdata = gene_annot(result = result,dds = dds,gtf_file = gtf_file)
 
-resdata = resdata[resdata$baseMean > 20,]
+expressed = resdata[resdata$baseMean > 20,]
 
-sig = resdata[resdata$padj < 0.05 & abs(resdata$log2FoldChange) > 2,]
+sig = expressed[expressed$padj < 0.05 & abs(expressed$log2FoldChange) > 2,]
 
 
 #### ATAC-seq ####
