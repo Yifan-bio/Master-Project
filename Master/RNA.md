@@ -3,13 +3,8 @@
 
 * [Package version](#package-version)
 * [Transcriptome quantification](#transcriptome-quantification)
-    + [Result](#result)
 * [Differential expression](#differential-expression)
-    + [Command](#command)
-    + [Result](#result)
-* [Enrichment analysis](#enrichment-analysis)
-    + [Command](#command)
-    + [Result](#result)    
+* [Enrichment analysis](#enrichment-analysis)   
 * [Reference](#reference)
 
 ## Package version
