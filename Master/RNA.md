@@ -105,57 +105,49 @@ dds <- DESeqDataSetFromTximport(countData = txi.salmon,
 dds <- DESeq(object = dds,
              test = 'Wald')
 
-# Extracting results from the analysis, specifiy the significant cut is 0.05
-result <- results(object = dds,
-                  filterFun = ihw,
-                  alpha = 0.05)
-
 # Performing l2FC shrinkage to remove bias.
 result <- lfcShrink(dds = dds,
                     coef = "condition_treated_vs_control",
-                    type="apeglm",
-                    res = result)
+                    type="apeglm")
 ```
 
 At this point, we will be done with DESeq2. Now it to make it easier for intepretation
 
 ```R
-library(GenomicFeatures)
-library(biomaRt)
-
-# Only keep the stable gene ID
-result$Row.names <- gsub("(ENSG[0-9]+)\\.[0-9]+", "\\1",result$Row.names) 
-# Getting the gene number of name
-G_list = getBM(filters = "ensembl_gene_id",
-               attributes = c("ensembl_gene_id","hgnc_symbol",'entrezgene_id'),
-               values = result$Row.names,
-               mart= biomart)
-# Adding the name and DESeq2 result into one dataframe
-result = merge(result,G_list,by.x="Row.names",by.y="ensembl_gene_id") 
-# Putting the accession number into transcripts without a official name
-result$hgnc_symbol = ifelse(result$hgnc_symbol =='',result$Row.names,result$hgnc_symbol)  
-# Remove duplicate recordings
-result = result %>% distinct(Row.names,hgnc_symbol,log2FoldChange,.keep_all = T)
-
-# Certain genes were not recprded in the biomart, so we use two databases
-result$id = mapIds(org.Hs.eg.db,keys = result$Row.names,column = 'ENTREZID',keytype = 'ENSEMBL',multiVals = 'first')
-# Combine the two results into one column
-for(i in 1:nrow(result)) {
-  if(is.na(result[i,'entrezgene_id'])){
-    result[i,'entrezgene_id'] = result[i,'id']
-  } 
+gene_annot <- function(result = result,dds = dds,gtf_file) {
+  
+  # Creating a ID to symbol conversion table
+  gtf_file <- rtracklayer::import(gtf_file)
+  gtf_file <- as.data.frame(gtf_file)
+  gtf_file <- unique(gtf_file[,c("gene_id","gene_name")])
+  
+  # Putting all important information into a single object
+  res <- merge(as.data.frame(result),
+               as.data.frame(counts(dds,normalized=TRUE)),
+               by = "row.names",
+               sort = FALSE)
+  # Putting the gene symbol with the gene id
+  res <- merge(x = res,
+               y = gtf_file,
+               by.x = "Row.names",
+               by.y = "gene_id")
+  
+  # Getting gene stable version number
+  res$Row.names <- gsub("(ENSG[0-9]+)\\.[0-9]+", "\\1",res$Row.names) 
+ 
+  return(res)
 }
+
+resdata = gene_annot(result = result,dds = dds,gtf_file = "../support_doc/Gencode/gencode.v40.annotation.gtf.gz")
+
+
 ```
 
 Now adding in cutoff values to determine the final results
 
 ```R
-library(tidyverse)
-DEG = result %>% dplyr::filter(padj <0.05 & baseMean > 20 & abs(log2FoldChange) > 2) 
-
-result$con = "non-significant"
-result$con[result$log2FoldChange > 2 & result$padj < 0.05] = "upregulated"
-result$con[result$log2FoldChange < -2 & result$padj < 0.05] = "downregulated"
+resdata = resdata[resdata$baseMean > 20,]
+sig = resdata[resdata$padj < 0.05 & abs(resdata$log2FoldChange) > 2,]
 ```
 
 ### Result
@@ -177,7 +169,7 @@ To shows the number of differential expressed genes and the distribution, we wil
   <img width="700" src="./Figure/Plot4A.png">
 </p>
 
-_**Figure 3.2. Volcano Plot.** L_
+_**Figure 3.2. Volcano Plot.** _
 
 
 
@@ -187,6 +179,33 @@ _**Figure 3.2. Volcano Plot.** L_
 Ads now we have a bunch of DEGs, we will like to obtain the biological meaning of these DEGs through running enrichment analysis. But kegg pathways shows a limited of understanding on the impact so we will only be focusing on Gene ontology of the genes.
 
 ### Command
+
+```R
+library("clusterProfiler")
+library("org.Hs.eg.db")
+
+ORA_GO = function(background,sig_gene,term = 'ALL') {
+  # Setting the universal genes
+  BG = as.character(background$Row.names)
+  # Creating the genelist for ORA
+  genelist = sig_gene$log2FoldChange
+  names(genelist) = sig_gene$Row.names
+  genelist = sort(genelist,decreasing = TRUE)
+  gene = names(genelist)[abs(genelist) > 2]
+  # Enrichment analysis using clusterProfiler
+  res <- enrichGO(gene = gene, 
+                  universe = BG,
+                  OrgDb = 'org.Hs.eg.db',
+                  ont = term,
+                  keyType = 'ENSEMBL',
+                  pAdjustMethod = "BH",
+                  pvalueCutoff = 0.01,
+                  readable = TRUE)
+  return(res)
+}
+
+ORA = ORA_GO(background = resdata,sig_gene = sig,term = "ALL")
+```
 
 ### Result
 
