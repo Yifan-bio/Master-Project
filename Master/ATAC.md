@@ -3,18 +3,10 @@
 
 * [Package version](#package-version)
 * [Library trimming](#library-trimming)
-    + [Command](#command)
 * [Alignment](#alignment)
-    + [Command](#command)
 * [Post-alignment filtering](#post-alignment-filtering)
-    + [Command](#command)
-    + [Result](#result)
 * [Peak calling](#peak-calling)
-    + [Command](#command)
-    + [Result](#result)
 * [Differential accessibility](#differential-accessibility)
-    + [Command](#command)
-    + [Result](#result)
 * [Reference](#reference)
 
 ## Package version
