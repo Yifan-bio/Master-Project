@@ -1,0 +1,320 @@
+
+library(ggpubr)
+
+Figure1 = ggpubr::ggarrange(ggarrange(plot3,plot4,labels = c("A","B")),
+                            ggarrange(plot2,plot1),
+                            nrow = 2,labels = c("","C")
+                            )
+
+Figure1 = annotate_figure(p = Figure1,bottom = text_grob("Gene count", size = 14))
+  
+ggsave("./Figure1.png",height = 7,width = 14)
+
+ggarrange(plot5,plot6,plot7,plot8,labels = c("A","B","C","D"))
+ggsave("./Figure2.png",height = 8,width = 8)
+
+# --- Plot 1 ----------
+
+plot1 = read.delim("./Genrich/Genrich_THP_greatExportAll.tsv")
+plot1 = plot1[1:15,]
+# plot1 = plot1[plot1$Desc %in% c("response to cytokine",                                   
+#                                 "inflammatory response",                                   
+#                                 "cellular response to cytokine stimulus" ,                 
+#                                 "positive regulation of intracellular signal transduction",
+#                                 "positive regulation of immune system process",
+#                                 "cytokine-mediated signaling pathway",           
+#                                 "leukocyte activation",                    
+#                                 "regulation of cell migration",                            
+#                                 "regulation of locomotion",                           
+#                                 "regulation of cell motility",                             
+#                                 "positive regulation of phosphorylation",                  
+#                                 "positive regulation of protein phosphorylation",          
+#                                 "regulation of MAPK cascade",                              
+#                                 "response to other organism",                              
+#                                 "regulation of cellular component movement"),]
+
+plot1 = 
+ggplot(data=plot1, aes(x=ObsGenes, y=Desc)) +
+  geom_bar(stat="identity",fill = "#E7524C") +
+  scale_y_discrete(position = "right") +
+  theme(legend.position="none",
+        axis.title.y=element_blank(), 
+        axis.title.x=element_blank(),
+        axis.text.y= element_text(size=12),
+        axis.text.x = element_text(size=12),
+        axis.line=element_line(color="gray"),
+        axis.line.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank()
+  )
+
+# ----- Plot 2 ----------------
+
+plot2 = ORA@result
+plot2 = plot2[plot2$ONTOLOGY == "BP",]
+plot2 = plot2[1:15,]
+
+plot2 = 
+ggplot(data= plot2, aes(x= Count, y= Description)) +
+  geom_bar(stat="identity",fill = "#2191A8") +
+  scale_y_discrete(position = "left") +
+  scale_x_reverse() +
+  theme(legend.position="none",
+        axis.title.y=element_blank(), 
+        axis.title.x=element_blank(),
+        axis.text.y= element_text(size=12),
+        axis.text.x = element_text(size=12),
+        axis.line=element_line(color="gray"),
+        axis.line.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        plot.background=element_blank()
+        )
+
+# ------- Plot 3 ----------------
+
+# Modifying the file so a pretty volcano plot can be made
+Volcano_plot_modification = function(resdata,L2FC,padj_value){
+  
+  # Adding the conditions for adding of colours
+  resdata$con = "non-significant"
+  resdata$con[resdata$log2FoldChange > L2FC & resdata$padj < padj_value] = "upregulated"
+  resdata$con[resdata$log2FoldChange < -(L2FC) & resdata$padj < padj_value] = "downregulated"
+  
+  # Deseq2 reports all padj < 1e-303 as 0 so need to be corrected
+  resdata$padj = ifelse(resdata$padj == 0,1e-303,resdata$padj)
+  
+  return(resdata)
+}
+
+resdata = Volcano_plot_modification(resdata = resdata,L2FC = 2,padj_value = 0.05)
+
+# Plotting
+plot3 = ggplot(resdata,aes(x=log2FoldChange,y=-log10(padj),color = con)) + geom_point() +
+  theme_classic() +                                                                  
+  theme(text = element_text(size = 15),legend.position = "none",rect = element_rect(fill = "transparent")) +
+  scale_colour_manual(values = c("#2191A8","#C0C0C0","#2191A8")) +                       # Change the colour of dots
+  labs(x = expression("Change in Gene Expression (Log"[2]*" Fold Change)"),y = expression("-log"[10]*"(p adjusted)"),color = "Gene status") + #naming
+  scale_y_continuous(expand = c(0,0),limits = c(0,310))   
+
+# --------- Plot 4 -----------------
+
+Volcano_plot_modification = function(resdata,L2FC,padj_value){
+  
+  # Adding the conditions for adding of colours
+  resdata$con = "non-significant"
+  resdata$con[resdata$Fold > L2FC & resdata$FDR < padj_value] = "upregulated"
+  resdata$con[resdata$Fold < -(L2FC) & resdata$FDR < padj_value] = "downregulated"
+  
+  # Deseq2 reports all padj < 1e-303 as 0 so need to be corrected
+  resdata$FDR = ifelse(resdata$FDR == 0,1e-303,resdata$FDR)
+  
+  return(resdata)
+}
+
+ATAC_report = Volcano_plot_modification(resdata = ATAC_report,L2FC = 2,padj_value = 0.05)
+
+# Plotting
+plot4 = ggplot(ATAC_report,aes(x=Fold,y=-log10(FDR),color = con)) + geom_point() +
+  theme_classic() +                                                                  
+  theme(text = element_text(size = 15),legend.position = "none",rect = element_rect(fill = "transparent")) +
+  scale_colour_manual(values = c("#E7524C","#C0C0C0","#E7524C")) +                       # Change the colour of dots
+  labs(x = expression("Change in Chromatin Accessibility (Log"[2]*" Fold Change)"),y = expression("-log"[10]*"(p adjusted)"),color = "Gene status") + #naming
+  scale_y_continuous(expand = c(0,0),limits = c(0,75))   
+
+# ----------- Plot 5 --------------------
+
+plot5 = annotate_region(promoter,ATAC_report)
+plot5$gene_id = gsub("(ENSG[0-9]+)\\.[0-9]+","\\1",plot5$gene_id)
+plot5 = plot5[plot5$gene_id %in% expressed$Row.names,]
+plot5 = merge(plot5,expressed,by.x = "gene_id",by.y = "Row.names")
+plot5 = plot5 %>% distinct(gene_id,annot.Fold,log2FoldChange,annot.start,.keep_all = T)
+
+plot5 = ggplot(plot5, aes(x=annot.Fold, y=log2FoldChange)) + 
+  geom_hline(yintercept=0, linetype="dashed", color = "grey") +
+  geom_vline(xintercept=0, linetype="dashed", color = "grey") +
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE) +
+  theme_classic() + 
+  ggpubr::stat_cor(method="pearson") +
+  labs(y = expression("mRNA log"[2]*" Fold Change"),x = expression("Promoter Accessibility log"[2]*" Fold Change"))
+
+# ------------- Plot 6 --------------------
+
+plot6 = annotate_region(active_enhancer,ATAC_report)
+plot6 = plot6[plot6$gene_name %in% expressed$gene_name,]
+plot6 = merge(plot6,expressed,by.x = "gene_name",by.y = "gene_name")
+
+plot6 = ggplot(plot6, aes(x=annot.Fold, y=log2FoldChange)) + 
+  geom_hline(yintercept=0, linetype="dashed", color = "grey") +
+  geom_vline(xintercept=0, linetype="dashed", color = "grey") +
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE) +
+  theme_classic() + 
+  ggpubr::stat_cor(method="pearson") +
+  labs(y = expression("mRNA log"[2]*" Fold Change"),x = expression("Enhancer Accessibility log"[2]*" Fold Change"))
+
+# --------------- Plot 7 --------------------
+
+plot7 = promoter_ATAC
+plot7$gene_id = gsub("(ENSG[0-9]+)\\.[0-9]+","\\1",plot7$gene_id)
+plot7 = plot7[plot7$gene_id %in% sig$Row.names,]
+plot7 = merge(plot7,sig,by.x = "gene_id",by.y = "Row.names")
+
+plot7 = ggplot(plot7, aes(x=annot.Fold, y=log2FoldChange)) + 
+  geom_hline(yintercept=0, linetype="dashed", color = "grey") +
+  geom_vline(xintercept=0, linetype="dashed", color = "grey") +
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE) +
+  theme_classic() + 
+  ggpubr::stat_cor(method="pearson") +
+  labs(y = expression("mRNA log"[2]*" Fold Change"),x = expression("Promoter Accessibility log"[2]*" Fold Change"))
+
+# ----------------- Plot 8 --------------------
+
+plot8 = enhancer_ATAC[enhancer_ATAC$gene_name %in% sig$gene_name,]
+plot8 = merge(plot8,expressed,by.x = "gene_name",by.y = "gene_name")
+
+plot8 = ggplot(plot8, aes(x=annot.Fold, y=log2FoldChange)) + 
+  geom_hline(yintercept=0, linetype="dashed", color = "grey") +
+  geom_vline(xintercept=0, linetype="dashed", color = "grey") +
+  geom_point()+
+  geom_smooth(method=lm, se=FALSE) +
+  theme_classic() + 
+  ggpubr::stat_cor(method="pearson") +
+  labs(y = expression("mRNA log"[2]*" Fold Change"),x = expression("Enhancer Accessibility log"[2]*" Fold Change"))
+
+# ------------------- Plot 9 --------------------
+
+library(enrichplot)
+
+# GO_term = c("inflammatory response","positive regulation of locomotion",
+#             "leukocyte cell-cell adhesion","chemotaxis",
+#             "ERK1 and ERK2 cascade","ERK1 and ERK2 cascade",
+#             "regulation of mononuclear cell proliferation","adaptive immune response")
+
+plot9 = ORA_RNA_sigAcc@result[ORA_RNA_sigAcc@result$ONTOLOGY == "BP",]
+plot9 = plot9[1:15,]
+
+plot9 = ggplot(plot9,aes(y = Description,x = Count)) + geom_bar(stat = "identity",fill = "#C0C0C0") +
+  theme_bw() + scale_x_continuous(limits = c(0,50),expand = c(0,0)) + 
+  theme(axis.title.y = element_blank(),axis.text = element_text(size = 14)) + 
+  labs(x = "Gene count")
+
+# --------------------- Plot 10 --------------------
+
+# Start
+x = data.frame(gene = gene,promoter = "0",enhancer = "0",expression = "0")
+
+# Test if the known region is accessible in at least one condition
+x$promoter[x$gene %in% promoter_peak$gene_name] = "2"
+x$enhancer[x$gene %in% enhancer_peak$gene_name] = "2"
+# If the region is experiencing a increase in accessibility
+x$enhancer[x$gene %in% enhancer_ATAC$gene_name[enhancer_ATAC$annot.Fold > 2]] = "4"
+x$promoter[x$gene %in% promoter_ATAC$gene_name[promoter_ATAC$annot.Fold > 2]] = "4"
+# If the region is experiencing a decrease in accessibility
+x$enhancer[x$gene %in% enhancer_ATAC$gene_name[enhancer_ATAC$annot.Fold < -2]] = "-4"
+x$promoter[x$gene %in% promoter_ATAC$gene_name[promoter_ATAC$annot.Fold < -2]] = "-4"
+# If the region contains a increase and a decrease in the cis-element
+x$enhancer[x$gene %in% enhancer_ATAC$gene_name[enhancer_ATAC$annot.Fold > 2] & x$gene %in% enhancer_ATAC$gene_name[enhancer_ATAC$annot.Fold < -2]] = "-2"
+x$promoter[x$gene %in% promoter_ATAC$gene_name[promoter_ATAC$annot.Fold > 2] & x$gene %in% promoter_ATAC$gene_name[promoter_ATAC$annot.Fold < -2]] = "-2"
+
+# If the gene is upregulated
+x$expression[x$gene %in% sig$gene_name[sig$log2FoldChange > 2]] = "4"
+# If gene down regulated
+x$expression[x$gene %in% sig$gene_name[sig$log2FoldChange < -2]] = "-4"
+
+
+# Labeling the sectors
+x$group = "C"
+x$group[x$promoter == "0" | x$enhancer == "0"] = "B"
+x$group[x$enhancer == "-2"] = "A"
+
+x$group[x$enhancer == "4" & x$expression == "-4"] = "D"
+x$group[x$enhancer == "-4" & x$expression == "4"] = "D"
+x$group[x$promoter == "-4" & x$expression == "4"] = "D"
+x$group[x$promoter == "4" & x$expression == "-4"] = "D"
+
+
+library(circlize)
+library(ComplexHeatmap)
+
+x$promoter = as.numeric(x$promoter)
+x$enhancer = as.numeric(x$enhancer)
+x$expression = as.numeric(x$expression)
+x$group = as.character(x$group)
+x = x %>% column_to_rownames("gene")
+split = factor(toupper(x$group), levels = toupper(letters[1:4]))
+x = data.matrix(x)
+
+png("./figure3B.png",width = 20,height = 22,units = "cm",res = 2000)
+circos.clear()
+circos.par(gap.after = c(2,2,2,25))
+
+circos.heatmap(x[,1:2],
+               col = colorRamp2(c(-4,-2,0,2,4), c( "purple", "goldenrod","black","lavender","darkolivegreen3")),
+               rownames.side = "outside",
+               rownames.cex = 1,
+               cell.border = "black",
+               split = split)
+
+circos.heatmap(x[,3],
+               col = colorRamp2(c(-4,4), c("purple","darkolivegreen3")),
+               cell.border = "black",
+               split = spilt)
+
+circos.track(track.index = get.current.track.index(), panel.fun = function(x, y) {
+  circos.text(CELL_META$xcenter, CELL_META$cell.ylim[2] + convert_y(2, "mm"), 
+              paste0("Group ",CELL_META$sector.index),
+              facing = "bending.inside", cex = 1,
+              adj = c(0.5, -14))
+})
+
+circos.track(track.index = get.current.track.index(), panel.fun = function(x, y) {
+  if(CELL_META$sector.numeric.index == 4) { # the last sector
+    circos.text(x = CELL_META$cell.xlim[2] + convert_x(7, "mm"),
+                y = 0.5,
+                labels = "Expression", 
+                cex = 0.65, 
+                facing = "bending.inside")
+    circos.text(x = CELL_META$cell.xlim[2] + convert_x(7.4, "mm"),
+                y = 1.3,
+                labels = "Enahncer", 
+                cex = 0.7, 
+                facing = "bending.inside")
+    circos.text(x = CELL_META$cell.xlim[2] + convert_x(7.8, "mm"), 
+                y = 1.9,
+                labels = "Promoter", 
+                cex = 0.7,
+                facing = "bending.inside")
+    
+  }
+}, bg.border = NA)
+
+legend(x = "bottom",
+       inset = 0,
+       title = NULL,
+       legend = c("Multiple enhancer with opposite change","No enhancer / Closed promoter","Accessible promoter","Decrease expression / Chromatin closing","Increase expression / Chromatin opening"),
+       fill = c( "goldenrod","black","lavender","purple","darkolivegreen3"),
+       cex = 1.1,
+       box.lty=0,
+       xpd = TRUE,
+       ncol = 2,bg = NA)
+
+
+dev.off()
+# ----------------------- Plot 11 --------------------
+
+x = read.delim("../../mart_export.txt")
+x = x[x$GO.term.name == "inflammatory response",]
+data = expressed[expressed$gene_name %in% x$Gene.name,]
+data = data[colnames(data) %in% c("gene_name","log2FoldChange")]
+
+# ------------------------- Plot 12 --------------------

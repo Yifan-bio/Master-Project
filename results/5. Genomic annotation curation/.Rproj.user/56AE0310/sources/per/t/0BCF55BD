@@ -1,0 +1,26 @@
+{
+    "id": "0BCF55BD",
+    "path": "E:/Script/5. Plotting.R",
+    "project_path": null,
+    "type": "r_source",
+    "hash": "1586514685",
+    "contents": "",
+    "dirty": false,
+    "created": 1690805013399.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "51,12",
+        "scrollLine": "24"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1690805688,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1690805688296,
+    "read_only": false,
+    "read_only_alternatives": []
+}
