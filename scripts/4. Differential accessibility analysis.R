@@ -3,7 +3,7 @@
 
 library(DiffBind)
 
-#### Creating a dataframe for the input to DESeq2 algorithm ####
+#### Creating a data frame for the input to DESeq2 algorithm ####
 
 
 # Putting in the metadata
@@ -33,6 +33,8 @@ ATAC_count <- dba.count(ATAC,minOverlap = 2,
                         bUseSummarizeOverlaps = TRUE
                         )
 
+remove(sampleTbl,ATAC)
+
 #### Differential Accessibility Analysis using DiffBind wrapped around DESeq2 ####
 
 # Differential accessibility analysis
@@ -48,6 +50,8 @@ ATAC_report <- dba.report(DBA = ATAC_analyze,
                           contrast = 1,
                           th = 1)
 
+remove(ATAC_count,ATAC_contrast,ATAC_analyze)
+
 #### Extracting usable regions ####
 
 library(tidyverse)
@@ -59,8 +63,12 @@ rownames(Diff.bind.sig) = 1:nrow(Diff.bind.sig)
 
 library(annotatr)
 # Preping annotations
-read_annotations(con="../6.Regulators/active_enhancer.bed",genome = "hg38",name="Genhancer",format = "bed")
-annotatr_annotations=build_annotations(genome = 'hg38',annotations = c('hg38_custom_Genhancer','hg38_basicgenes'))
+read_annotations(con = "../6.Regulators/active_enhancer.bed",
+                 genome = "hg38",
+                 name = "Genhancer",
+                 format = "bed")
+annotatr_annotations <- build_annotations(genome = 'hg38',
+                                          annotations = c('hg38_custom_Genhancer','hg38_basicgenes'))
 
 # Annotating the results
 annotated = annotate_regions(regions = GRanges(Diff.bind.sig),

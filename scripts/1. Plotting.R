@@ -1,8 +1,9 @@
 # Script for all plotting involved in section 1 RNA pre-processing
-# Last modified: 19 March 2023
+# Last modified: 1 Sep 2023
 
 library(tidyverse)
 library(scales)
+
 #### Import information from salmon output ####
 
 # The info file is still manual, need to create a script for it!!!
@@ -16,19 +17,21 @@ file_list = c('./1. salmon/0hr_rep1/quant.sf',
 #### Plot1A Mapping rate and read component ####
 
 # Plotting log info from salmon output
-x = salmon_meta %>% select(Total:number.of.fragments.filtered.vm,Orphan)
+plot1A = salmon_meta %>% select(Total:number.of.fragments.filtered.vm,Orphan)
 # Calculating unmapped reads due to not recorded in file and Paired end mapped reads
-x$Unrecorded = x$Total - x$Mapped - x$Decoy - x$Dovetail - x$number.of.fragments.filtered.vm
-x$PairedMap = x$Mapped - x$Orphan
-x = x %>% dplyr::select(PairedMap,Orphan,Unrecorded,Decoy,Dovetail,number.of.fragments.filtered.vm)
+plot1A$Unrecorded = plot1A$Total - plot1A$Mapped - plot1A$Decoy - plot1A$Dovetail - plot1A$number.of.fragments.filtered.vm
+plot1A$PairedMap = plot1A$Mapped - plot1A$Orphan
+plot1A = plot1A %>% dplyr::select(PairedMap,Orphan,Unrecorded,Decoy,Dovetail,number.of.fragments.filtered.vm)
 
-colnames(x) = c("Paired Mapped","Orphan Recovered","No Match","Decoy","Dovetail","Quality cutoff")
-rownames(x) = c("Untreat Replicate 1","Untreat Replicate 2","Treat Replicate 1","Treat Replicate 2")
+colnames(plot1A) = c("Paired Mapped","Orphan Recovered","No Match","Decoy","Dovetail","Quality cutoff")
+rownames(plot1A) = c("Untreat Replicate 1","Untreat Replicate 2","Treat Replicate 1","Treat Replicate 2")
 # Coverting into long dataframe
-x$name = rownames(x)
-x = x %>% pivot_longer(!name,names_to = "ReadType",values_to = "read")
+plot1A$name = rownames(plot1A)
+plot1A = plot1A %>% pivot_longer(!name,names_to = "ReadType",values_to = "read")
 
-Plot1A = ggplot(x,aes(y = read,x=name,fill= factor(ReadType,levels = c("No Match","Decoy","Dovetail","Quality cutoff","Orphan Recovered","Paired Mapped")))) + 
+plot1A = ggplot(plot1A,aes(y = read,
+                           x=name,
+                           fill= factor(ReadType,levels = c("No Match","Decoy","Dovetail","Quality cutoff","Orphan Recovered","Paired Mapped")))) + 
   geom_bar(stat = 'identity',position = "stack") +
   scale_y_continuous(labels = unit_format(unit = "",scale = 1e-6),expand = c(0,0),limits = c(0,1e8)) +
   coord_flip() +
@@ -36,26 +39,26 @@ Plot1A = ggplot(x,aes(y = read,x=name,fill= factor(ReadType,levels = c("No Match
   theme_bw() +
   scale_fill_manual(values=c("#F4606C","#ECAD9E","#E6CEAC","#D1BA74","#A0EEE1","#19CAAD"))
 
-ggsave(plot = Plot1A,filename = "Plot1A.png",width = 9,height = 4)
+ggsave(plot = plot1A,filename = "Plot1A.png",width = 9,height = 4)
 
 #### Plot1B TPM versus length of transcript ####
 
 Plot1B = function(quant_file,Length_cut = FALSE,TPM_cut = FALSE,name_level = FALSE) {
-  x = readr::read_delim(quant_file)
-  x = x %>% filter(TPM != 0)
+  temp = readr::read_delim(quant_file)
+  temp = temp %>% filter(TPM != 0)
   # To rename the Gencode name
-  x$Name = (do.call('rbind', strsplit(as.character(x$Name),'|',fixed=TRUE)))[,2]
-  x$Name = gsub("(ENSG[0-9]+)\\.[0-9]+", "\\1",x$Name)
+  temp$Name = (do.call('rbind', strsplit(as.character(temp$Name),'|',fixed =TRUE)))[,2]
+  temp$Name = gsub("(ENSG[0-9]+)\\.[0-9]+", "\\1",temp$Name)
   
-  # Adding limit to each axis
+  # Adding limit to each atempis
   if (TPM_cut != FALSE){
-    x$TPM[x$TPM > TPM_cut] = TPM_cut
+    temp$TPM[temp$TPM > TPM_cut] = TPM_cut
   }
   if (Length_cut != FALSE) {
-    x$Length[x$Length > Length_cut] = Length_cut
+    temp$Length[temp$Length > Length_cut] = Length_cut
   }
   
-  plot = ggplot(x,aes(x = Length,y=TPM)) + geom_point() + scale_alpha_identity() +
+  plot = ggplot(temp,aes(x = Length,y=TPM)) + geom_point() + scale_alpha_identity() +
     theme_bw() + labs(x = "Length of Transcript",y = "TPM of each transcript")  
   
   # Adding name to each plot, the name level means the level after split by "/":

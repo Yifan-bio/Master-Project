@@ -1,20 +1,25 @@
 # This script is put together to allow the running of differential expression analysis using RNA-seq
 # Last modification: 14 March 2023
 
-# Each section contains a # remove function that can remove function / objects that will not be used in the remaining script
-
-
+# Package version
+#
+#
+#
+#
 
 #### Preparation of tximport dataframes ####
-# Salmon output read count per transcript. But we want to do differential gene analysis 
-# which requires genecount. This section preps a reference table for tximport allowing
-# the transcript count to be summarised to the correct gene.
+
+# Result from salmon are recorded as transcript counts, but we need to convert 
+# these into gene counts, to do this, there needs to be a conversion table to 
+# allow the algorithm know the gene each transcript originate from.
+# This section preps this reference table by using the corresponding gtf file 
+# (metadate file) that was used for salmon index creation. 
 
 library(GenomicFeatures)
 
 # function to create the tx2gene file
 tx2gene_creation = function(gtf_file) {
-  # Intaking the gtf file as binary
+  # Intaking the gtf file as binary object for R
   temp1 = GenomicFeatures::makeTxDbFromGFF(file = gtf_file)
   # Extracting the required information
   temp2 = AnnotationDbi::keys(x = temp1,
@@ -27,32 +32,31 @@ tx2gene_creation = function(gtf_file) {
   return(temp)
 }
 
-tx2gene = tx2gene_creation('../../support_doc/Gencode/gencode.v40.annotation.gtf.gz')
+# Running the function to create the refence table.
+tx2gene = tx2gene_creation('../support_doc/Gencode/gencode.v40.annotation.gtf')
 
-# remove(tx2gene)
 
 #### Importing Result from salmon using tximport #### 
-# Result from salmon will be imported into R using tximport. The result will require in put 
 
 library("tximport")
 
-# Listing the location of each salmon output count file (quant.sf files)
+# Listing the location of the salmon output file
 files = c('./Input/0hr_rep1/quant.sf',
           './Input/0hr_rep2/quant.sf',
           './Input/24hr_rep1/quant.sf',
           './Input/24hr_rep2/quant.sf')
 
-# Importing salmon files into R and combinding the transcript counts into gene counts
+# Import files into tximport and converting transcript counts to gene counts
 txi.salmon <- tximport(files = files,
                        type = "salmon",
                        txOut = FALSE,
                        tx2gene = tx2gene,
                        ignoreAfterBar = T)
 
-# Creating a table to specficy the condition of each file.
+# Creating a table with the metainfo
 sampleTable <- data.frame(condition = factor(rep(c("control", "treated"),each = 2)))
 
-# Connecting the conditions with the file imported using tximport.
+# Combining the metainfo with the tximport results
 rownames(sampleTable) <- colnames(txi.salmon$counts) 
 
 # remove(files,tx2gene)
@@ -62,7 +66,8 @@ rownames(sampleTable) <- colnames(txi.salmon$counts)
 
 library("DESeq2")
 
-# 
+# Importing result from tximport into DESeq2 to allow the correct format for
+# differential analysis
 dds <- DESeqDataSetFromTximport(txi = txi.salmon, 
                                 colData = sampleTable,
                                 design = ~ condition)
@@ -77,13 +82,11 @@ dds <- DESeqDataSetFromTximport(txi = txi.salmon,
 dds <- DESeq(object = dds,
              test = 'Wald')
 
-# Getting the results out of DEseq2
+# Getting the results out of DEseq2 and shrinking the L2FC of some lowly expressed genes
 result = lfcShrink(dds = dds,
                    coef = "condition_treated_vs_control",
                    type = "apeglm"
                    )
-
-# remove(txi.salmon,sampleTable,keep)
 
 #### Adding annotation to DESeq2 results #####
 
@@ -117,7 +120,6 @@ resdata = resdata[resdata$baseMean > 20,]
 
 sig = resdata[resdata$padj < 0.05 & abs(resdata$log2FoldChange) > 2,]
 
-# remove(dds,result,)
 
 #### Over-enrichment Analysis for GO terms ####
 
