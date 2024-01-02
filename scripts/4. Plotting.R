@@ -1,128 +1,63 @@
-# Script for all plotting invovled in section 4 differential expression analysis
+# Script for all plotting involved in section 5 differential accessibility analysis
 # Last modified: 17 March 2023
 
-library(tidyverse)
-library(gridExtra)
+library("tidyverse")
+library("gridExtra")
 
-#### Plot4A Volcano Plot ####
+#### Plot5A Scatter plot comparing conditions ####
 
-# Modifying the file so a pretty volcano plot can be made
-Volcano_plot_modification = function(resdata,L2FC,padj_value){
-  
-  # Adding the conditions for adding of colours
-  resdata$con = "non-significant"
-  resdata$con[resdata$log2FoldChange > L2FC & resdata$padj < padj_value] = "upregulated"
-  resdata$con[resdata$log2FoldChange < -(L2FC) & resdata$padj < padj_value] = "downregulated"
-  
-  # Deseq2 reports all padj < 1e-303 as 0 so need to be corrected
-  resdata$padj = ifelse(resdata$padj == 0,1e-303,resdata$padj)
-  
-  return(resdata)
+ScatterPlot_preparation = function(DiffBind_df,L2FC,FDR) {
+  DiffBind_df$Condition = "Unchange"
+  DiffBind_df$Condition[DiffBind_df$Fold > 2 & DiffBind_df$FDR < 0.05] = "Opening"
+  DiffBind_df$Condition[DiffBind_df$Fold < -2 & DiffBind_df$FDR < 0.05] = "Closing"
+  return(DiffBind_df)
 }
+x = ScatterPlot_preparation(ATAC_report)
 
-resdata = Volcano_plot_modification(resdata = resdata,L2FC = 2,padj_value = 0.05)
 
-# Plotting
-ggplot(resdata,aes(x=log2FoldChange,y=-log10(padj),color = con)) + geom_point() +
-  theme_bw() +                                                                  
-  theme(text = element_text(size = 20),legend.position = "none",rect = element_rect(fill = "transparent")) +
-  scale_colour_manual(values = c("#4995C6","#C0C0C0","#B9181A")) +                       # Change the colour of dots
-  labs(x = expression("Change in Gene Expression (Log"[2]*" Fold Change)"),y = expression("-log"[10]*"(p adjusted)"),color = "Gene status") + #naming
-  scale_y_continuous(expand = c(0,0),limits = c(0,310))                                         # Remove the gap between the resdatas and x margin
-
-ggsave("Plot4A.png",width = 9,height = 5,dpi = 1200)
-
-# Cleaning up
-remove(Volcano_plot_modification)
-
-#### Plot4B Upset Plot ####
-
-library(ggupset)
-
-UpsetPlot_preparation = function(Enrich_result,GO_terms) {
-  
-  # Selecting the terms to be used in upset plot
-  temp = as.data.frame(Enrich_result)
-  temp = temp[temp$Description %in% GO_terms,]
-  
-  # Splitting the genes into separate columns
-  temp_max = max(temp$Count)
-  temp[c(paste0("V",1:temp_max))] <- str_split_fixed(temp$geneID,"/",temp_max)
-  temp = temp %>% select(Description,V1:paste0("V",temp_max))
-  
-  # Converting the format into upsetplot required format
-  temp = temp %>% pivot_longer(!Description,names_to = "name",values_to = "value")
-  temp = temp %>% filter(!value == "") # Remove some noises
-  temp = temp %>% select(!name)
-  temp = temp %>% group_by(value) %>% summarise(Pathways = list(Description))
-  
-  return(temp)
-}
-
-# Go term for plotting upsetplot
-GO_terms = c("inflammatory response","leukocyte migration",
-             "nucleosome assembly","nuclear division",
-             "regulation of mitotic cell cycle","chemotaxis",
-             "DNA replication-dependent chromatin assembly")
-
-x = UpsetPlot_preparation(Enrich_result = ORA,GO_terms = GO_terms)
-
-# PLotting
-ggplot(temp,aes(x=Pathways)) + 
-  geom_bar() + 
+Plot5A = ggplot(data = x,aes(x = Conc_Treated,y=Conc_Control,color = Condition)) +
+  geom_point() + 
+  scale_color_manual(values=c("#4995C6","#B9181A","#C0C0C0")) + 
   theme_bw() +
-  scale_x_upset() +
-  theme(
-    plot.title = element_blank(),
-    axis.title.x = element_blank(),
-    axis.title.y = element_blank())
+  theme(axis.title = element_text(size = 18),axis.text = element_text(size = 13),legend.position = "right",legend.text = element_text(size = 18),legend.title = element_text(size = 18)) +
+  labs(x = "Chromatin accessibility after PMA treatment",y = "Chromatin accessibility before PMA treatment") +
+  scale_y_continuous(limits = c(0,12.2),expand = c(0,0)) +
+  scale_x_continuous(limits = c(0,12.2),expand = c(0,0))
 
-ggsave(filename = "Plot4B.png",plot = x,dpi = 1200,width = 6.8,height = 4)
+ggsave(dpi = 1200,filename = "Plot5A.png",height = 10,width = 13.1)
 
-#### Plot4C Transcript TPM distribution ####
 
-x = txi.salmon[["abundance"]]
-x = data.frame(x)
-colnames(x) = c("Untreat_1","Untreat_2","Treat_1","Treat_2")
+#### Plot5B Venn Diagram for DiffBind ####
 
-# Converting to long dataframe and remove NULL values
-x$gene = row.names(x)
-x = x %>% pivot_longer(!gene,names_to = "replicate",values_to = "abundance")
-x = x %>% filter(abundance != 0)
+library("DiffBind")
 
-# Prepring for facet
-x$condition = (do.call('rbind', strsplit(as.character(x$replicate),'_',fixed=TRUE)))[,1]
-x$rep = (do.call('rbind', strsplit(as.character(x$replicate),'_',fixed=TRUE)))[,2]
+dba.plotVenn(DBA = ATAC_contrast,
+             mask = ATAC_contrast$masks$PMA)
 
-ggplot(x,aes(x = log10(abundance),y = -0.02)) +
-  # Horizontal boxplot
-  ggstance::geom_boxploth(aes(fill = condition),width = 0.03) +
-  # density plot
-  geom_density(aes(x = log10(abundance)),inherit.aes = F) +
-  facet_grid(rows = vars(rep),cols = vars(condition)) +
-  scale_fill_discrete() +
-  geom_hline(yintercept = 0)+
-  labs(y = "Proportion of genes",x = "log10(TPM)")
+#### Plot5C PCA plot ####
 
-ggsave("Plot4C.png",width = 7,height = 5)
+dba.plotPCA(DBA = ATAC_analyze,contrast = 1,label = DBA_CONDITION)
 
-#### Plot4D Biomarkers ####
+#### Plot5D MA plot ####
 
-x = resdata_2 %>% select(gene_name,V1:V4)
-colnames(x) = c("Gene","Untreat1","Untreat2","Treat1","Treat2")
+dba.plotMA(DBA = ATAC_analyze)
 
-# Select gene to plot
-x = x[x$Gene %in% c("CD14","APOE","ICAM1","ITGAM","SPP1","CSF1","CSF1R"),]
-x = x %>% pivot_longer(!Gene,names_to = "Rep",values_to = "abundance")
-x$rep = gsub('[[:digit:]]+', '',x$Rep)
+#### Plot5E Box plot ####
 
-ggplot(x,aes(x = reorder(rep,+abundance),y = abundance)) + 
-  stat_summary(geom = "bar", fun = mean, position = "dodge",show.legend = FALSE) +
-  stat_summary(geom = "errorbar", fun.data = mean_se, position = "dodge") +
-  facet_wrap(~ Gene,ncol = 4,scales = "free") +
-  theme_bw() +
-  labs(x=NULL,y=NULL)
+dba.plotBox(ATAC_analyze)
 
-#### Plot for Main Script ####
+#### Plot5F Heatmap ####
 
-# P
+dba.plotProfile(ATAC_analyze)
+
+#### Plot5G region annotations ####
+Plot5G = plot_annotation(
+  annotated_regions = annotated,
+  annotation_order = c('hg38_genes_promoters','hg38_genes_introns','hg38_genes_exons','hg38_custom_Genhancer') ,
+  x_label = 'Genomic regions',
+  y_label = 'Gene count') +
+  scale_y_continuous(limits = c(0,5000),expand = c(0,0)) +
+  theme(axis.title = element_text(size = 18),axis.text = element_text(size = 15),axis.title.x=element_blank())
+
+ggpubr::ggarrange(Plot5A,NULL,Plot5G,ncol = 1,heights = c(2,0.1,1),labels = c("A","","B"))
+ggsave("x.png",width = 13,height = 13.5)
