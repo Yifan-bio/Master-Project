@@ -1,0 +1,9 @@
+Sample Name	% Dups	% GC	Read Length	M Seqs
+ATAC_THP1_0hrPMA_rep1_r1	76.6%	45%	69 bp	134.2
+ATAC_THP1_0hrPMA_rep1_r2	74.4%	45%	69 bp	134.2
+ATAC_THP1_0hrPMA_rep2_r1	75.4%	45%	69 bp	101.5
+ATAC_THP1_0hrPMA_rep2_r2	74.0%	45%	69 bp	101.5
+ATAC_THP1_24hrPMA_rep1_r1	70.3%	45%	69 bp	128.2
+ATAC_THP1_24hrPMA_rep1_r2	68.1%	45%	69 bp	128.2
+ATAC_THP1_24hrPMA_rep2_r1	67.7%	45%	69 bp	101.6
+ATAC_THP1_24hrPMA_rep2_r2	66.5%	45%	69 bp	101.6
