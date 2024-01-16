@@ -36,3 +36,7 @@ All samples are obtained from the bioProject [PRJNA533829](https://www.ebi.ac.uk
     - SRR8932930 (0 hour replicate 1)
     - SRR8932934 (24 hour replicate 1)
     - SRR8932935 (0 hour replicate 2)
+
+## Quality Assessed samples
+
+## Link to Google drive storing intermediate results.
