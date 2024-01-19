@@ -72,19 +72,9 @@ samtools view -h -b -q 30 -@ 4 -F 1804 -f 2 -o ${prefix}.final.bam ${prefix}.rmC
 samtools index ${prefix}.final.bam
 ```
 
-### Result
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot2A.png">
-</p>
-
-_**Plot2A. High number of mitochondrial contamination detected in ATAC-seq library.** Library reads were removed due to several different constraints._
-
-
 ## Peak calling
 
-Currently, there is two package designed for ATAC-seq peak calling which is Genrich and HMMRATAC. In this study, we ran both. HMMRATAC provide us with a gappedPeak format which allows the whole accessible regions to be determined (peaks can be upto 10kbs long due to continuos open chromatin regions). Genrich provides a narrowPeak format providing only the few hundred bp of highly accessible regions.
+Currently, there is two package designed for ATAC-seq peak calling which is Genrich and HMMRATAC. In this study, we tested both and used HMMRATAC. This is because that Genrich provides a narrowPeak format with a Max length of few hundred basepair. HMMRATAC provide us with a gappedPeak format which allows the whole accessible regions to be determined (peaks can be upto 10kbs long due to continuos open chromatin regions). Genrich provides a narrowPeak format providing only the few hundred bp of highly accessible regions. However, ATAC-seq results is very noisy so it would cause false positive results. Therefore we used HMMRATAC that used a gappedPeak protocol. Similar situation with LanceOtron. 
 
 ### Command
 
@@ -96,30 +86,12 @@ HMMRATAC -b ${prefix}.final.bam \
          -e $blacklist \ 
          -m $readlength,200,400,600 \
          --window 5000000 # remove RAM issue
-
-# Genrich peak calling
-
 ```
 
-### Result
-
-The peak calling of ATAC-seq results is a highly noise influenced process. As the plot below shows, Plot2B, the width and score of the peaks called using HMMRATAC shows to be influenced by the number of usable reads. Therefor, any conclusion made by using the peak calling result itself need to be performed with precaution as a bias were introduced. 
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot2B.png">
-</p>
-
-<br />
-
-We now look at the number of peak regions overlap between the replicates. We could see that majority of the peaks within untreat replicate 2, which is the one with the lowest number of usable reads and the lowest number of called peaks, are common across all replicates.
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot2C.png">
-</p>
-
 ## Differential accessibility
+
+The differentially accessible abalysis is been conducted using DiffBind in this study. In the current stage there is three approaches, a) using DiffBind to obtain a standardised peak and run differential analysis, b) using csaw to do fragment differentiation analysis and c) using user generated peak regions and compare using DESeq2. However, method B has shown to be overobjective which may reuslts in false differential accessble event to be detected. Method C will generate over lenint region that will not be ideal for differentiatal analysis. Therefor we used DiffBind.
+
 
 ### Command
 
