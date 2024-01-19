@@ -1,0 +1,132 @@
+Version:	1.2.10
+Arguments Used:
+-b	/home/studentsgh129/Downloads/bowtie2/treat_rep2.rmChrM.dedup.filter.bam
+-i	/home/studentsgh129/Downloads/bowtie2/treat_rep2.rmChrM.dedup.filter.bam.bai
+-g	/home/studentsgh129/Downloads/bowtie2/size.genome
+--means	75,200,400,600
+--window	1000000
+--removeDuplicates	false
+-o	/home/studentsgh129/Downloads/bowtie2/treat_rep2_peaks
+-e	/home/studentsgh129/Downloads/bowtie2/hg38-blacklist.v2.bed
+Fragment Expectation Maximum Done
+Mean	75.0	StdDevs	20.0
+Mean	188.23577792738797	StdDevs	50.88236949146572
+Mean	372.780442994209	StdDevs	43.6732162959827
+Mean	572.2876033902216	StdDevs	88.27704884154133
+ScalingFactor	43.711181
+Training Regions found and Zscore regions for exclusion found
+Training Fragment Pileup completed
+Kmeans Model:
+HMM with 3 state(s)
+
+State 0
+  Pi: 0.3333333333333333
+  Aij: 0,333 0,333 0,333
+  Opdf: Multi-variate Gaussian distribution --- Mean: [ 0,039 0,056 0,038 0,024 ]
+
+State 1
+  Pi: 0.3333333333333333
+  Aij: 0,333 0,333 0,333
+  Opdf: Multi-variate Gaussian distribution --- Mean: [ 0,166 0,236 0,19 0,121 ]
+
+State 2
+  Pi: 0.3333333333333333
+  Aij: 0,333 0,333 0,333
+  Opdf: Multi-variate Gaussian distribution --- Mean: [ 0,541 0,68 0,531 0,392 ]
+
+Model created and refined. See /home/studentsgh129/Downloads/bowtie2/treat_rep2_peaks.model
+Model:
+HMM with 3 state(s)
+
+State 0
+  Pi: 0.3333333333333333
+  Aij: 0,956 0,038 0,007
+  Opdf: Multi-variate Gaussian distribution --- Mean: [ 0 0 0 0 ]
+
+State 1
+  Pi: 0.3333333333333333
+  Aij: 0,038 0,949 0,012
+  Opdf: Multi-variate Gaussian distribution --- Mean: [ 0,088 0,133 0,037 0,006 ]
+
+State 2
+  Pi: 0.3333333333333333
+  Aij: 0,005 0,009 0,986
+  Opdf: Multi-variate Gaussian distribution --- Mean: [ 0,144 0,189 0,19 0,138 ]
+
+Genome split and subtracted masked regions
+0 round viterbi done
+50 round viterbi done
+100 round viterbi done
+150 round viterbi done
+200 round viterbi done
+250 round viterbi done
+300 round viterbi done
+350 round viterbi done
+400 round viterbi done
+450 round viterbi done
+500 round viterbi done
+550 round viterbi done
+600 round viterbi done
+650 round viterbi done
+700 round viterbi done
+750 round viterbi done
+800 round viterbi done
+850 round viterbi done
+900 round viterbi done
+1000 round viterbi done
+1050 round viterbi done
+1100 round viterbi done
+1150 round viterbi done
+1200 round viterbi done
+1250 round viterbi done
+1300 round viterbi done
+1350 round viterbi done
+1400 round viterbi done
+1450 round viterbi done
+1550 round viterbi done
+1600 round viterbi done
+1650 round viterbi done
+1700 round viterbi done
+1750 round viterbi done
+1800 round viterbi done
+1850 round viterbi done
+1900 round viterbi done
+1950 round viterbi done
+2000 round viterbi done
+2050 round viterbi done
+2100 round viterbi done
+2150 round viterbi done
+2200 round viterbi done
+2250 round viterbi done
+2300 round viterbi done
+2350 round viterbi done
+2400 round viterbi done
+2450 round viterbi done
+2500 round viterbi done
+2550 round viterbi done
+2600 round viterbi done
+2650 round viterbi done
+2700 round viterbi done
+2750 round viterbi done
+2800 round viterbi done
+2850 round viterbi done
+2900 round viterbi done
+3050 round viterbi done
+3100 round viterbi done
+3200 round viterbi done
+3250 round viterbi done
+3300 round viterbi done
+3350 round viterbi done
+3400 round viterbi done
+3450 round viterbi done
+3500 round viterbi done
+3550 round viterbi done
+3600 round viterbi done
+3700 round viterbi done
+3750 round viterbi done
+3850 round viterbi done
+3900 round viterbi done
+3950 round viterbi done
+4000 round viterbi done
+4016 round viterbi done
+Total time (seconds)= 	3820

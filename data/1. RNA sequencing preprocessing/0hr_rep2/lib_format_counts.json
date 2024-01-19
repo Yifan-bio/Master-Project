@@ -1,0 +1,22 @@
+{
+    "read_files": "[ /mnt/f/Dataset/162nM_PMA_RNA_THP1/SRR8932935_RNA_THP1_0hrPMA_rep2_R1.fastq.gz, /mnt/f/Dataset/162nM_PMA_RNA_THP1/SRR8932935_RNA_THP1_0hrPMA_rep2_R2.fastq.gz]",
+    "expected_format": "ISF",
+    "compatible_fragment_ratio": 1.0,
+    "num_compatible_fragments": 48220654,
+    "num_assigned_fragments": 48220654,
+    "num_frags_with_concordant_consistent_mappings": 46818900,
+    "num_frags_with_inconsistent_or_orphan_mappings": 1416039,
+    "strand_mapping_bias": 0.9999903885893332,
+    "MSF": 0,
+    "OSF": 0,
+    "ISF": 46818900,
+    "MSR": 0,
+    "OSR": 0,
+    "ISR": 450,
+    "SF": 853598,
+    "SR": 561991,
+    "MU": 0,
+    "OU": 0,
+    "IU": 0,
+    "U": 0
+}
