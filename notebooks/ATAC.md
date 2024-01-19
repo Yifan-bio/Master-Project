@@ -132,66 +132,6 @@ ATAC_report <- dba.report(DBA = ATAC_analyze,DataType = DBA_DATA_FRAME,method = 
 Diff.bind.sig = ATAC_report %>% dplyr::filter(abs(Fold) > 2 & FDR < 0.01)
 ```
 
-### Result
-
-We looked at the number of overlap peaks between the replicates
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot5A.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot5B.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot5C.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot5D.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot5E.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot5F.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot5G.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/PlotGreatA.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/PlotGreatB.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/PlotGreatC.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/PlotGreatV.png">
-</p>
-
-
 ## Reference
 
 All command employed in this section can be found in [this script](../Script/2.%20ATAC%20preprocessing.sh)

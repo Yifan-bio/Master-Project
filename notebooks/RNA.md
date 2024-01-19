@@ -34,27 +34,10 @@ salmon index -t ${transcripts.fa} -i $transcripts_index --decoys ${decoys.txt} -
 salmon quant -i $index -l A -1 $R1 -2 $R2 -p 8 --validateMappings --gcBias --seqBias --recoverOrphans -o $output
 ```
 
-### Result
-
 The mapping of results using Salmon ranges between 50% and 60% (Plot 1A). We noticed that many reads were removed due to quality issues or were not recorded within the index. In section 0, we suggested a low likelihood of foreign contamination. Therefore, considering these results together, we believe that the contamination we are observing here is possibly DNA or ncRNA not recorded in the index. This is a possible outcome of rRNA depletion, the method used for RNA extraction, so there isn't strong evidence to worry about quality issues for the RNA sequencing alignment result.
 
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot1A.png">
-</p>
-
-_**Plot1A. Alignment rate and component of RNA-seq library.** The alignment rate of each sample varies between 50% to 60%. Paired Mapped reads and Orphan Recovered reads are considered as usable reads (The two green)._
-
-<br />
 
 According to the theory of RNA-seq, long transcripts should have more RNA-seq library reads after read fragmentation. However, there are also studies that suggest that long transcripts are generally expressed at a low level due to the conservation of energy. Therefore, we plotted Plot1C to examine the distribution of TPM versus transcript length. We found that the overall distribution appears highly similar.
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot1B.png">
-</p>
-
-_**Plot1B. TPM versus transcript length.**_
 
 ## Differential expression
 > Conducted in R studio
@@ -145,29 +128,6 @@ resdata = resdata[resdata$baseMean > 20,]
 sig = resdata[resdata$padj < 0.05 & abs(resdata$log2FoldChange) > 2,]
 ```
 
-### Result
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot4E.png">
-</p>
-
-To shows the number of differential expressed genes and the distribution, we will be plotting a volcanoi lot for DEGs to show there parameters. 
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot4C.png">
-</p>
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot4A.png">
-</p>
-
-_**Figure 3.2. Volcano Plot.** _
-
-
-
 
 ## Enrichment analysis
 
@@ -201,14 +161,6 @@ ORA_GO = function(background,sig_gene,term = 'ALL') {
 
 ORA = ORA_GO(background = resdata,sig_gene = sig,term = "ALL")
 ```
-
-### Result
-
-<br />
-<p align="center">
-  <img width="700" src="./Figure/Plot4B.png">
-</p>
-
 
 ## Reference
 
