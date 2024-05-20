@@ -4,6 +4,7 @@
 library(tidyverse)
 library(scales)
 
+
 #### Plot0A Per base quality ####
 
 temp =  read_tsv("./Input/fastqc_per_base_sequence_quality_plot.tsv")
